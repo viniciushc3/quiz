@@ -1,0 +1,157 @@
+[
+  {
+    "text": "Quantos irmãos formam o grupo principal da família?",
+    "answers": ["2", "3", "4", "5"],
+    "correct": 2
+  },
+  {
+    "text": "Qual é a ordem correta dos irmãos do mais velho para o mais novo?",
+    "answers": [
+      "Marcelo, Vinícius, Andreza, Andrew",
+      "Vinícius, Marcelo, Andreza, Andrew",
+      "Andreza, Vinícius, Marcelo, Andrew",
+      "Vinícius, Andreza, Marcelo, Andrew"
+    ],
+    "correct": 1
+  },
+  {
+    "text": "Todos os irmãos são filhos da mesma mãe.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 0
+  },
+  {
+    "text": "Qual dos irmãos é filho do mesmo pai e da mesma mãe?",
+    "answers": ["Andrew", "Andreza", "Marcelo", "Todos"],
+    "correct": 2
+  },
+  {
+    "text": "Todos os irmãos atualmente são casados.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 0
+  },
+  {
+    "text": "Quem é casada(o) com Thales?",
+    "answers": ["Andreza", "Maria", "Jaqueline", "Daiane"],
+    "correct": 0
+  },
+  {
+    "text": "Quem é casada(o) com Jaqueline?",
+    "answers": ["Marcelo", "Andrew", "Vinícius", "Heleno"],
+    "correct": 1
+  },
+  {
+    "text": "Quem é casada(o) com Maria?",
+    "answers": ["Andrew", "Vinícius", "Marcelo", "Thales"],
+    "correct": 2
+  },
+  {
+    "text": "Quem é casada(o) com Daiane?",
+    "answers": ["Andrew", "Marcelo", "Vinícius", "Heleno"],
+    "correct": 2
+  },
+  {
+    "text": "Qual destes nomes pertence à geração mais nova da família?",
+    "answers": ["Andreza", "Arthur", "Marcelo", "Heleno"],
+    "correct": 1
+  },
+  {
+    "text": "Quantas crianças fazem parte da família atualmente?",
+    "answers": ["1", "2", "3", "4"],
+    "correct": 2
+  },
+  {
+    "text": "Quais são os nomes das crianças da família?",
+    "answers": [
+      "Arthur e Alice",
+      "Arthur e Theodoro",
+      "Alice e Eva",
+      "Theodoro e Marcelo"
+    ],
+    "correct": 0
+  },
+  {
+    "text": "Theodoro é filho(a) de quem?",
+    "answers": ["Andrew", "Andreza", "Marcelo", "Vinícius"],
+    "correct": 1
+  },
+  {
+    "text": "Arthur e Alice são irmãos.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 0
+  },
+  {
+    "text": "A família da mãe tem vários irmãos.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 0
+  },
+  {
+    "text": "Quantos irmãos a mãe da família teve?",
+    "answers": ["4", "5", "6", "7"],
+    "correct": 2
+  },
+  {
+    "text": "Qual destes nomes faz parte da família materna?",
+    "answers": ["Evandro", "Thales", "Jaqueline", "Daiane"],
+    "correct": 0
+  },
+  {
+    "text": "Dilza e Marília fazem parte da família materna.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 0
+  },
+  {
+    "text": "Quem costuma ajudar a organizar encontros de família?",
+    "answers": ["Os irmãos", "A mãe", "As crianças", "Os cunhados"],
+    "correct": 1
+  },
+  {
+    "text": "Heleno faz parte da família como:",
+    "answers": ["Tio", "Pai", "Padrasto", "Avô"],
+    "correct": 2
+  },
+  {
+    "text": "A família hoje se reúne menos do que no passado.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 0
+  },
+  {
+    "text": "Mesmo com menos encontros, a família continua próxima.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 0
+  },
+  {
+    "text": "Qual destas características combina mais com a família?",
+    "answers": ["Distante", "Formal", "Unida", "Silenciosa"],
+    "correct": 2
+  },
+  {
+    "text": "A família mistura momentos emocionais e engraçados.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 0
+  },
+  {
+    "text": "Qual destas pessoas NÃO faz parte da família?",
+    "answers": ["Arthur", "Eva", "Lucas", "Andreza"],
+    "correct": 2
+  },
+  {
+    "text": "A nova geração trouxe uma nova dinâmica para a família.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 0
+  },
+  {
+    "text": "As crianças ajudam a manter a família mais conectada.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 0
+  },
+  {
+    "text": "A família valoriza mais estar junta do que formalidades.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 0
+  },
+  {
+    "text": "Este quiz representa memórias e laços da família.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 0
+  }
+]
