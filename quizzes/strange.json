@@ -1,0 +1,102 @@
+[
+  {
+    "text": "Stranger Things se passa na cidade fictícia de Hawkins.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 0
+  },
+  {
+    "text": "O Mundo Invertido é apresentado pela primeira vez na 2ª temporada.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 1
+  },
+  {
+    "text": "Eleven tem poderes de telecinese.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 0
+  },
+  {
+    "text": "Will desaparece enquanto voltava de bicicleta para casa.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 0
+  },
+  {
+    "text": "O Demogorgon é controlado diretamente por Vecna.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 1
+  },
+  {
+    "text": "Steve Harrington começa a série como vilão.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 0
+  },
+  {
+    "text": "Dustin perde os dentes permanentes.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 0
+  },
+  {
+    "text": "Max aparece pela primeira vez na terceira temporada.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 1
+  },
+  {
+    "text": "O Mind Flayer se parece com uma aranha gigante.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 0
+  },
+  {
+    "text": "Hopper é o diretor da escola de Hawkins.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 1
+  },
+  {
+    "text": "Eleven usa waffles como forma de energia para seus poderes.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 1
+  },
+  {
+    "text": "A série é fortemente inspirada em filmes dos anos 80.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 0
+  },
+  {
+    "text": "Vecna já foi humano antes de se tornar um vilão.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 0
+  },
+  {
+    "text": "Robin é a melhor amiga de infância de Eleven.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 1
+  },
+  {
+    "text": "O shopping Starcourt esconde uma base secreta russa.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 0
+  },
+  {
+    "text": "Will tem ligação especial com o Mundo Invertido.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 0
+  },
+  {
+    "text": "Mike nunca se separa de Eleven durante a série.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 1
+  },
+  {
+    "text": "Stranger Things tem elementos de RPG como Dungeons & Dragons.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 0
+  },
+  {
+    "text": "O laboratório de Hawkins realiza experimentos com crianças.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 0
+  },
+  {
+    "text": "A música ajuda os personagens a escapar do controle de Vecna.",
+    "answers": ["Verdadeiro", "Falso"],
+    "correct": 0
+  }
+]
