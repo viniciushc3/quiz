@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Controle</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <audio id="clickSfx" src="https://www.soundjay.com/buttons/sounds/button-30.mp3"></audio>
+
+    <div id="loginScreen" class="player-container" style="justify-content:center;">
+        <h1 style="font-size:3rem; margin-bottom:20px;">🎮 Quiz</h1>
+        <input type="text" id="nickname" placeholder="Seu Nome" style="padding:20px; font-size:1.5rem; text-align:center; border-radius:10px; border:2px solid #ddd; margin-bottom:15px;">
+        <button onclick="joinGame()" class="btn blue">ENTRAR</button>
+        <button onclick="clearSession()" class="btn" style="background:#ccc; color:#333; margin-top:20px;">Sair</button>
+    </div>
+
+    <div id="gameScreen" class="player-container hidden">
+        <h2 id="statusText" style="margin:10px 0;">Escolha!</h2>
+        <div class="player-grid" id="controls">
+            <button class="p-btn red" onclick="sendAnswer(0)"></button>
+            <button class="p-btn blue" onclick="sendAnswer(1)"></button>
+            <button class="p-btn yellow" onclick="sendAnswer(2)"></button>
+            <button class="p-btn green" onclick="sendAnswer(3)"></button>
+        </div>
+    </div>
+
+    <div id="resultScreen" class="hidden" style="height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:20px;">
+        <h1 id="resIcon" style="font-size:6rem;"></h1>
+        <h1 id="resTitle" style="font-size:3rem;"></h1>
+        <h2 id="resScore"></h2>
+    </div>
+
+    <script type="module">
+        import { db, ref, set, push, onValue, update } from './game.js';
+
+        let myId = localStorage.getItem('k_uid');
+        const audio = document.getElementById('clickSfx');
+        const playSfx = () => { audio.currentTime=0; audio.play().catch(()=>{}); };
+        const avatars = ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🦄","🐙","👽","🤖","👻","🤡","🤠","💩","🌵","🍄","🍕","🍔","🚀","⚽"];
+
+        if(myId) connect();
+
+        window.joinGame = function() {
+            const name = document.getElementById('nickname').value.trim();
+            if(!name) return alert("Nome?");
+            const bad = ["admin","host","palavrao"]; 
+            if(bad.some(b => name.toLowerCase().includes(b))) return alert("Nome inválido!");
+
+            playSfx();
+            const refP = push(ref(db, 'players'));
+            myId = refP.key;
+            localStorage.setItem('k_uid', myId);
+
+            set(refP, {
+                name: name,
+                avatar: avatars[Math.floor(Math.random()*avatars.length)],
+                score: 0, streak: 0, status: 'thinking'
+            }).then(() => connect());
+        }
+
+        window.clearSession = function() { localStorage.removeItem('k_uid'); location.reload(); }
+
+        function connect() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            document.getElementById('gameScreen').classList.remove('hidden');
+            
+            onValue(ref(db, `players/${myId}`), (snap) => {
+                const data = snap.val();
+                if(!data) { localStorage.removeItem('k_uid'); location.reload(); return; }
+
+                const gameDiv = document.getElementById('gameScreen');
+                const resDiv = document.getElementById('resultScreen');
+
+                if(data.status === 'thinking' && data.lastAnswer == null) {
+                    gameDiv.classList.remove('hidden'); resDiv.classList.add('hidden');
+                    document.body.style.background = "#f0f2f5";
+                    document.getElementById('statusText').innerText = "Sua vez!";
+                    document.getElementById('controls').style.opacity = "1";
+                    document.querySelectorAll('.p-btn').forEach(b => b.disabled = false);
+                }
+                else if(data.status === 'correct' || data.status === 'wrong') {
+                    gameDiv.classList.add('hidden'); resDiv.classList.remove('hidden');
+                    if(data.status === 'correct') {
+                        document.body.style.background = "#26890c";
+                        document.getElementById('resTitle').innerText = "ACERTOU!";
+                        document.getElementById('resIcon').innerText = "🤩";
+                    } else {
+                        document.body.style.background = "#e21b3c";
+                        document.getElementById('resTitle').innerText = "ERROU...";
+                        document.getElementById('resIcon').innerText = "😢";
+                    }
+                    document.getElementById('resScore').innerText = `${data.score} pts`;
+                }
+            });
+        }
+
+        window.sendAnswer = function(idx) {
+            if(!myId) return;
+            playSfx();
+            if(navigator.vibrate) navigator.vibrate(50);
+            
+            update(ref(db, `players/${myId}`), { lastAnswer: idx, answerTime: Date.now() });
+            
+            document.getElementById('statusText').innerText = "Enviado! 🤞";
+            document.getElementById('controls').style.opacity = "0.5";
+            document.querySelectorAll('.p-btn').forEach(b => b.disabled = true);
+        }
+    </script>
+</body>
+</html>

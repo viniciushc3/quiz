@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="admin-container">
+        
+        <div id="screenSelection">
+            <h2>📂 Escolha o Quiz</h2>
+            <div class="quiz-card" onclick="loadQ('./quizzes/geral.json')">
+                <span>🌍 Conhecimentos Gerais</span><span>🧠</span>
+            </div>
+             <div class="quiz-card" onclick="loadQ('./quizzes/series.json')">
+                <span>🎬 Filmes e Séries</span><span>🍿</span>
+            </div>
+        </div>
+
+        <div id="screenControl" class="hidden" style="display:flex; flex-direction:column; height:100%;">
+            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
+                <h3>Controle</h3>
+                <button onclick="location.reload()" style="padding:5px;">📂 Voltar</button>
+            </div>
+            
+            <div class="admin-scroll" id="qList"></div>
+
+            <div style="padding-top:10px; border-top:1px solid #ccc;">
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px;">
+                    <button onclick="updateState('leaderboard')" class="btn blue" style="margin:0;">📊 Ranking</button>
+                    <button onclick="updateState('podium')" class="btn yellow" style="margin:0;">🏆 Pódio</button>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:5px;">
+                    <button onclick="updateState('lobby')" class="btn" style="margin:0; background:#555;">🏠 Lobby</button>
+                    <button onclick="nuke()" class="btn red" style="margin:0;">🗑️ Limpar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { db, ref, update, get, set, keepScreenAwake, loadQuestions } from './game.js';
+
+        let quizData = [];
+        let timer = null;
+        let qStartTime = 0;
+        const sfx = new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3');
+
+        keepScreenAwake();
+
+        window.loadQ = async function(path) {
+            sfx.play();
+            quizData = await loadQuestions(path);
+            if(!quizData.length) return;
+
+            const list = document.getElementById('qList');
+            list.innerHTML = '';
+            quizData.forEach((q, i) => {
+                const btn = document.createElement('button');
+                btn.className = 'btn';
+                btn.style.background = "white"; btn.style.color = "#333"; btn.style.textAlign = "left";
+                btn.innerHTML = `<b>#${i+1}</b> ${q.text.substring(0,30)}...`;
+                btn.onclick = () => { sfx.play(); runQ(i); };
+                list.appendChild(btn);
+            });
+
+            document.getElementById('screenSelection').classList.add('hidden');
+            document.getElementById('screenControl').classList.remove('hidden');
+            updateState('lobby');
+        }
+
+        window.updateState = (screen) => { update(ref(db, 'gameState'), { screen: screen }); }
+        window.nuke = () => { if(confirm("Zerar?")) set(ref(db, 'players'), {}); }
+
+        window.runQ = async function(idx) {
+            if(timer) clearTimeout(timer);
+            qStartTime = Date.now();
+            const timeLimit = 20;
+            
+            // Resetar Players
+            const pSnap = await get(ref(db, 'players'));
+            const updates = {};
+            if(pSnap.exists()) pSnap.forEach(c => { updates[`players/${c.key}/lastAnswer`] = null; updates[`players/${c.key}/status`] = 'thinking'; updates[`players/${c.key}/answerTime`] = null; });
+            
+            updates['gameState'] = { screen: 'question', currentQuestion: idx, showResult: false, endTime: qStartTime+(timeLimit*1000) };
+            await update(ref(db), updates);
+
+            timer = setTimeout(() => finishQ(idx), timeLimit*1000);
+        }
+
+        async function finishQ(idx) {
+            const pSnap = await get(ref(db, 'players'));
+            const correct = quizData[idx].correct;
+            const updates = {};
+            updates['gameState/showResult'] = true;
+
+            if(pSnap.exists()) pSnap.forEach(c => {
+                const p = c.val();
+                if(p.lastAnswer === correct) {
+                    const streak = (p.streak||0) + 1;
+                    
+                    // Pontos por tempo
+                    let taken = (p.answerTime || (qStartTime+20000)) - qStartTime;
+                    if(taken < 0) taken = 0; if(taken > 20000) taken = 20000;
+                    const bonus = Math.floor(500 * (1 - (taken/20000)));
+                    
+                    updates[`players/${c.key}/score`] = (p.score||0) + 500 + bonus + (streak>2?200:0);
+                    updates[`players/${c.key}/streak`] = streak;
+                    updates[`players/${c.key}/status`] = 'correct';
+                } else {
+                    updates[`players/${c.key}/streak`] = 0;
+                    updates[`players/${c.key}/status`] = 'wrong';
+                }
+            });
+            await update(ref(db), updates);
+        }
+    </script>
+</body>
+</html>
