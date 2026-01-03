@@ -11,66 +11,50 @@
 
     <div id="screenSelection" style="padding: 25px; height: 100vh; overflow-y: auto;">
         <h2 style="margin-bottom: 10px; color: #333; font-weight: 800;">👋 Olá, Admin!</h2>
-        <p style="color: #666; margin-bottom: 30px;">Escolha um quiz para começar a partida.</p>
-
         <div class="quiz-grid">
-            
             <div onclick="loadQ('./quizzes/geral.json')" class="quiz-card-modern">
-                <i class="fas fa-brain quiz-icon-large"></i>
-                <span class="quiz-title-modern">Gerais</span>
+                <i class="fas fa-brain quiz-icon-large"></i><span class="quiz-title-modern">Gerais</span>
             </div>
-
             <div onclick="loadQ('./quizzes/series.json')" class="quiz-card-modern">
-                <i class="fas fa-film quiz-icon-large" style="background: -webkit-linear-gradient(45deg, #0984e3, #74b9ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
-                <span class="quiz-title-modern">Séries/Filmes</span>
+                <i class="fas fa-film quiz-icon-large"></i><span class="quiz-title-modern">Séries</span>
             </div>
-
             <div onclick="loadQ('./quizzes/strange.json')" class="quiz-card-modern">
-                <i class="fas fa-ghost quiz-icon-large" style="background: -webkit-linear-gradient(45deg, #d63031, #ff7675); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
-                <span class="quiz-title-modern">Stranger/Geek</span>
+                <i class="fas fa-ghost quiz-icon-large"></i><span class="quiz-title-modern">Stranger</span>
             </div>
-            
             <div onclick="loadQ('./quizzes/familia.json')" class="quiz-card-modern">
-                <i class="fas fa-home quiz-icon-large" style="background: -webkit-linear-gradient(45deg, #e67e22, #f39c12); -webkit-background-clip: text; -webkit-text-fill-color: transparent;"></i>
-                <span class="quiz-title-modern">Família</span>
+                <i class="fas fa-home quiz-icon-large"></i><span class="quiz-title-modern">Família</span>
             </div>
-
         </div>
     </div>
 
     <div id="screenControl" class="hidden" style="display:flex; flex-direction:column; height:100%;">
-        
         <div class="admin-header">
             <h3 style="margin:0;"><i class="fas fa-gamepad"></i> Painel</h3>
             <button onclick="location.reload()" class="btn-modern btn-outline" style="width: auto; padding: 5px 15px; font-size:0.8rem;">
-                <i class="fas fa-chevron-left"></i> Trocar Quiz
+                <i class="fas fa-chevron-left"></i> Sair
             </button>
+        </div>
+
+        <div style="padding: 15px 15px 0 15px;">
+            <button onclick="runRandomQ()" class="btn-modern" style="background: linear-gradient(45deg, #00b894, #00cec9); font-size: 1.2rem; box-shadow: 0 4px 15px rgba(0, 184, 148, 0.4);">
+                <i class="fas fa-dice"></i> PRÓXIMA ALEATÓRIA
+            </button>
+            <div style="text-align:center; font-size:0.8rem; color:#666; margin-top:5px;">
+                Restantes: <span id="lblRemaining">0</span>
+            </div>
         </div>
 
         <div class="admin-content" id="qList">
             </div>
 
         <div class="admin-footer">
-            
-            <button onclick="forceFinish()" class="btn-modern btn-danger" style="grid-column: span 2; margin-bottom: 5px; background: #e17055;">
+            <button onclick="forceFinish()" class="btn-modern btn-danger" style="grid-column: span 2; margin-bottom: 5px;">
                 <i class="fas fa-stopwatch"></i> ENCERRAR TEMPO
             </button>
-
-            <button onclick="updateState('lobby')" class="btn-modern btn-dark">
-                <i class="fas fa-home"></i> Lobby / Próx
-            </button>
-            
-            <button onclick="updateState('leaderboard')" class="btn-modern btn-primary">
-                <i class="fas fa-chart-bar"></i> Ranking
-            </button>
-
-            <button onclick="updateState('podium')" class="btn-modern btn-warning" style="grid-column: span 2;">
-                <i class="fas fa-trophy"></i> PÓDIO FINAL
-            </button>
-            
-            <button onclick="nuke()" class="btn-modern btn-outline" style="grid-column: span 2; margin-top:5px; opacity:0.7; border:1px solid #ff7675; color:#ff7675; box-shadow: none;">
-                <i class="fas fa-trash"></i> Resetar Sala
-            </button>
+            <button onclick="updateState('lobby')" class="btn-modern btn-dark"><i class="fas fa-home"></i> Lobby</button>
+            <button onclick="updateState('leaderboard')" class="btn-modern btn-primary"><i class="fas fa-chart-bar"></i> Ranking</button>
+            <button onclick="updateState('podium')" class="btn-modern btn-warning" style="grid-column: span 2;"><i class="fas fa-trophy"></i> PÓDIO FINAL</button>
+            <button onclick="nuke()" class="btn-modern btn-outline" style="grid-column: span 2; margin-top:5px; opacity:0.5; box-shadow: none; border:1px solid #ff7675; color:#ff7675;"><i class="fas fa-trash"></i> Resetar</button>
         </div>
     </div>
 
@@ -78,12 +62,12 @@
         import { db, ref, update, get, set, keepScreenAwake, loadQuestions } from './game.js';
 
         let quizData = [];
+        let playedIndices = []; // Lista de perguntas já feitas
         let timer = null;
         let qStartTime = 0;
         let currentIdx = 0; 
         
         const sfx = new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3');
-
         keepScreenAwake();
 
         window.loadQ = async function(path) {
@@ -91,23 +75,31 @@
             quizData = await loadQuestions(path);
             if(!quizData.length) return;
 
+            // --- SINCRONIZAÇÃO: Envia as perguntas para a TV (Firebase) ---
+            await set(ref(db, 'activeQuiz'), quizData);
+            
+            // Reseta histórico de jogadas
+            playedIndices = [];
+            updateRemainingLabel();
+
             const list = document.getElementById('qList');
             list.innerHTML = '';
             
             quizData.forEach((q, i) => {
                 const item = document.createElement('div');
                 item.className = 'q-item';
+                item.id = `q-item-${i}`; // ID para marcar visualmente depois
                 item.innerHTML = `
                     <div style="display:flex; align-items:center;">
                         <span class="q-number">#${i+1}</span>
-                        <span style="font-size:0.9rem;">${q.text.substring(0,35)}...</span>
+                        <span style="font-size:0.9rem;">${q.text.substring(0,30)}...</span>
                     </div>
                     <i class="fas fa-play" style="color:#ddd; font-size: 0.8rem;"></i>
                 `;
                 item.onclick = () => {
                     sfx.play();
-                    Array.from(list.children).forEach(c => c.classList.remove('active'));
-                    item.classList.add('active');
+                    // Se clicar manual, também conta como jogada
+                    if(!playedIndices.includes(i)) playedIndices.push(i);
                     runQ(i);
                 };
                 list.appendChild(item);
@@ -118,16 +110,49 @@
             updateState('lobby');
         }
 
+        // --- FUNÇÃO DE SORTEIO ---
+        window.runRandomQ = function() {
+            sfx.play();
+            // Cria array com índices disponíveis (0, 1, 2...) filtrando os já jogados
+            const available = quizData.map((_, i) => i).filter(i => !playedIndices.includes(i));
+            
+            if(available.length === 0) {
+                alert("Fim do Quiz! Todas as perguntas foram feitas.");
+                return;
+            }
+
+            // Sorteia um índice
+            const randomIndex = available[Math.floor(Math.random() * available.length)];
+            
+            playedIndices.push(randomIndex);
+            runQ(randomIndex);
+        }
+
+        function updateRemainingLabel() {
+            const total = quizData.length;
+            const left = total - playedIndices.length;
+            document.getElementById('lblRemaining').innerText = `${left} de ${total}`;
+            
+            // Marca visualmente os jogados na lista
+            playedIndices.forEach(idx => {
+                const el = document.getElementById(`q-item-${idx}`);
+                if(el) {
+                    el.style.opacity = "0.5";
+                    el.style.background = "#e0e0e0";
+                    el.querySelector('.fa-play').className = "fas fa-check";
+                }
+            });
+        }
+
         window.updateState = (screen) => { 
             sfx.play();
             update(ref(db, 'gameState'), { screen: screen }); 
         }
         
-        window.nuke = () => { if(confirm("Tem certeza que quer expulsar todos?")) set(ref(db, 'players'), {}); }
+        window.nuke = () => { if(confirm("Tem certeza?")) set(ref(db, 'players'), {}); }
 
         window.forceFinish = function() {
             if(timer) {
-                console.log("Encerrando tempo manualmente...");
                 clearTimeout(timer);
                 finishQ(currentIdx);
             }
@@ -136,6 +161,13 @@
         window.runQ = async function(idx) {
             if(timer) clearTimeout(timer);
             
+            updateRemainingLabel(); // Atualiza contador
+            
+            // Marca visualmente o item ativo
+            Array.from(document.querySelectorAll('.q-item')).forEach(c => c.classList.remove('active'));
+            const activeEl = document.getElementById(`q-item-${idx}`);
+            if(activeEl) activeEl.classList.add('active');
+
             currentIdx = idx;
             qStartTime = Date.now();
             const timeLimit = 30; 

@@ -9,77 +9,104 @@
 </head>
 <body class="tv-bg">
     
-    <div id="btnSound" style="position:absolute; top:20px; left:20px; z-index:999; cursor:pointer; opacity:0.7;">
+    <div id="btnSound" style="position:absolute; top:20px; left:20px; z-index:999; cursor:pointer; opacity:0.8; background:rgba(0,0,0,0.3); padding:10px; border-radius:50%;">
         <i class="fas fa-volume-mute fa-2x"></i>
     </div>
     
     <div id="lobby" class="host-container">
-        <div class="glass-panel" style="text-align:center; padding: 40px;">
-            <h1 style="font-size: 3rem; margin:0;">Entre no Jogo!</h1>
-            <img id="qrCode" src="" style="border-radius: 10px; margin: 20px 0; border: 5px solid white;">
-            <h2 id="joinUrl" style="background:white; color:#333; padding:10px 30px; border-radius:50px; display:inline-block;"></h2>
+        <div class="glass-panel" style="text-align:center; padding: 40px; min-width: 50%;">
+            <h1 style="font-size: 3.5rem; margin:0; font-weight: 800; text-shadow: 0 4px 15px rgba(0,0,0,0.2);">Entre no Jogo!</h1>
+            
+            <div style="background: white; padding: 10px; display: inline-block; border-radius: 15px; margin: 20px 0;">
+                <img id="qrCode" src="" style="width: 250px; height: 250px; display: block;">
+            </div>
+            
+            <br>
+            <h2 id="joinUrl" style="background: white; color: #333; padding: 10px 30px; border-radius: 50px; display: inline-block; box-shadow: 0 5px 15px rgba(0,0,0,0.1);"></h2>
         </div>
         
         <div style="margin-top:30px; width:100%;">
-            <h3 style="opacity:0.8;">Jogadores Prontos (<span id="count">0</span>)</h3>
-            <div id="playerList" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; max-width:1000px; margin: 0 auto;"></div>
+            <h3 style="opacity:0.9; font-weight: 600; font-size: 1.5rem;">Jogadores Prontos (<span id="count">0</span>)</h3>
+            <div id="playerList" style="display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; max-width:1100px; margin: 0 auto;"></div>
         </div>
     </div>
 
     <div id="game" class="host-container hidden">
-        <div id="timerCircle" style="position:fixed; top:30px; right:30px; width:80px; height:80px; background:white; color:#333; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:2.5rem; font-weight:800; box-shadow:0 10px 20px rgba(0,0,0,0.2); z-index:100;">30</div>
+        
+        <div id="timerCircle">30</div>
 
-        <div class="glass-panel" style="width: 90%; max-width: 1200px; padding: 30px;">
+        <div class="glass-panel" style="width: 90%; max-width: 1200px; padding: 30px; margin-bottom: 20px;">
+            
             <div id="mediaContainer" class="hidden" style="margin-bottom: 20px; display:flex; justify-content:center;">
-                <img id="qImg" class="hidden" style="max-height: 30vh; border-radius:10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
-                <video id="qVid" class="hidden" style="max-height: 30vh; border-radius:10px;" loop playsinline></video>
+                <img id="qImg" class="hidden" style="max-height: 35vh; border-radius:15px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);">
+                <video id="qVid" class="hidden" style="max-height: 35vh; border-radius:15px; box-shadow: 0 5px 15px rgba(0,0,0,0.2);" loop playsinline></video>
                 <audio id="qAud"></audio>
             </div>
 
-            <div id="questionText" class="question-text">...</div>
+            <div id="questionText" class="question-text">Carregando pergunta...</div>
         </div>
 
         <div class="answers-grid" id="ansGrid">
-            <div class="ans-card red" id="opt0"><span class="ans-text">A</span><div class="result-bar" id="bar0" style="position:absolute; bottom:0; left:0; width:100%; height:0; background:rgba(0,0,0,0.4); z-index:-1; transition:height 1s;"></div><div class="vote-count" id="count0" style="position:absolute; bottom:10px; right:10px; background:white; color:#333; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; opacity:0;">0</div></div>
-            <div class="ans-card blue" id="opt1"><span class="ans-text">B</span><div class="result-bar" id="bar1" style="position:absolute; bottom:0; left:0; width:100%; height:0; background:rgba(0,0,0,0.4); z-index:-1; transition:height 1s;"></div><div class="vote-count" id="count1" style="position:absolute; bottom:10px; right:10px; background:white; color:#333; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; opacity:0;">0</div></div>
-            <div class="ans-card yellow" id="opt2"><span class="ans-text">C</span><div class="result-bar" id="bar2" style="position:absolute; bottom:0; left:0; width:100%; height:0; background:rgba(0,0,0,0.4); z-index:-1; transition:height 1s;"></div><div class="vote-count" id="count2" style="position:absolute; bottom:10px; right:10px; background:white; color:#333; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; opacity:0;">0</div></div>
-            <div class="ans-card green" id="opt3"><span class="ans-text">D</span><div class="result-bar" id="bar3" style="position:absolute; bottom:0; left:0; width:100%; height:0; background:rgba(0,0,0,0.4); z-index:-1; transition:height 1s;"></div><div class="vote-count" id="count3" style="position:absolute; bottom:10px; right:10px; background:white; color:#333; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; opacity:0;">0</div></div>
+            <div class="ans-card red" id="opt0">
+                <span class="ans-text">A</span>
+                <div class="result-bar" id="bar0"></div>
+                <div class="vote-count" id="count0">0</div>
+            </div>
+            <div class="ans-card blue" id="opt1">
+                <span class="ans-text">B</span>
+                <div class="result-bar" id="bar1"></div>
+                <div class="vote-count" id="count1">0</div>
+            </div>
+            <div class="ans-card yellow" id="opt2">
+                <span class="ans-text">C</span>
+                <div class="result-bar" id="bar2"></div>
+                <div class="vote-count" id="count2">0</div>
+            </div>
+            <div class="ans-card green" id="opt3">
+                <span class="ans-text">D</span>
+                <div class="result-bar" id="bar3"></div>
+                <div class="vote-count" id="count3">0</div>
+            </div>
         </div>
     </div>
 
     <div id="leaderboard" class="host-container hidden">
-        <h1 style="font-size:3.5rem; margin-bottom:30px; text-shadow:0 4px 10px rgba(0,0,0,0.2);">🏆 Ranking Atual</h1>
-        <div id="leaderboardList" style="width:100%; display:flex; flex-direction:column; align-items:center;"></div>
+        <h1 style="font-size:4rem; margin-bottom:40px; text-shadow:0 4px 10px rgba(0,0,0,0.3); font-weight: 800;">🏆 Ranking Atual</h1>
+        <div id="leaderboardList" style="width:100%; display:flex; flex-direction:column; align-items:center;">
+            </div>
     </div>
 
     <div id="podium" class="host-container hidden">
-        <h1 style="font-size:4rem; margin-bottom:50px;">VENCEDORES</h1>
-        <div style="display:flex; align-items:flex-end; gap:20px;">
+        <h1 style="font-size:5rem; margin-bottom:60px; font-weight: 900; letter-spacing: 5px;">VENCEDORES</h1>
+        
+        <div style="display:flex; align-items:flex-end; gap:30px;">
             <div style="text-align:center;">
-                <div id="p2Name" style="font-weight:bold; font-size:1.5rem; margin-bottom:10px;">-</div>
-                <div style="width:120px; height:200px; background:rgba(255,255,255,0.8); border-radius:15px 15px 0 0; display:flex; align-items:flex-end; justify-content:center; padding-bottom:20px; color:#333; font-weight:800; font-size:3rem;">2</div>
+                <div id="p2Name" style="font-weight:bold; font-size:1.8rem; margin-bottom:15px; text-shadow: 0 2px 5px rgba(0,0,0,0.5);">-</div>
+                <div style="width:140px; height:220px; background:rgba(255,255,255,0.8); border-radius:15px 15px 0 0; display:flex; align-items:flex-end; justify-content:center; padding-bottom:20px; color:#333; font-weight:800; font-size:4rem; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">2</div>
             </div>
-            <div style="text-align:center;">
-                <div style="font-size:3rem;">👑</div>
-                <div id="p1Name" style="font-weight:bold; font-size:2rem; margin-bottom:10px;">-</div>
-                <div style="width:150px; height:300px; background:white; border-radius:15px 15px 0 0; display:flex; align-items:flex-end; justify-content:center; padding-bottom:20px; color:#333; font-weight:800; font-size:4rem; box-shadow: 0 0 50px rgba(255,255,255,0.5);">1</div>
+            
+            <div style="text-align:center; transform: scale(1.1); z-index: 10;">
+                <div style="font-size:4rem; margin-bottom: -10px;">👑</div>
+                <div id="p1Name" style="font-weight:bold; font-size:2.2rem; margin-bottom:15px; text-shadow: 0 2px 5px rgba(0,0,0,0.5);">-</div>
+                <div style="width:160px; height:320px; background:white; border-radius:15px 15px 0 0; display:flex; align-items:flex-end; justify-content:center; padding-bottom:20px; color:#333; font-weight:800; font-size:5rem; box-shadow: 0 0 50px rgba(255,255,255,0.6);">1</div>
             </div>
+            
             <div style="text-align:center;">
-                <div id="p3Name" style="font-weight:bold; font-size:1.5rem; margin-bottom:10px;">-</div>
-                <div style="width:120px; height:150px; background:rgba(255,255,255,0.6); border-radius:15px 15px 0 0; display:flex; align-items:flex-end; justify-content:center; padding-bottom:20px; color:#333; font-weight:800; font-size:3rem;">3</div>
+                <div id="p3Name" style="font-weight:bold; font-size:1.8rem; margin-bottom:15px; text-shadow: 0 2px 5px rgba(0,0,0,0.5);">-</div>
+                <div style="width:140px; height:160px; background:rgba(255,255,255,0.6); border-radius:15px 15px 0 0; display:flex; align-items:flex-end; justify-content:center; padding-bottom:20px; color:#333; font-weight:800; font-size:4rem; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">3</div>
             </div>
         </div>
     </div>
 
     <script type="module">
-        // Importe a lógica original, apenas as classes CSS mudaram
-        import { db, ref, onValue, keepScreenAwake, loadQuestions } from './game.js';
+        import { db, ref, onValue, keepScreenAwake } from './game.js';
 
-        let questions = [];
+        let questions = []; // Lista de perguntas (sincronizada com o Admin)
         let playersList = [];
         let timerInt = null;
         let audioOn = false;
 
+        // --- SISTEMA DE ÁUDIO (JUKEBOX) ---
         const tracks = {
             lobby: new Audio('https://www.soundjay.com/misc/sounds/dream-harp-02.mp3'),
             think: new Audio('https://www.soundjay.com/clock/sounds/clock-ticking-2.mp3'),
@@ -93,12 +120,24 @@
             curr: null,
             play: function(key) {
                 if(!audioOn) return;
-                if(this.curr && this.curr !== tracks[key]) { this.curr.pause(); this.curr.currentTime=0; }
-                if(tracks[key]) { this.curr = tracks[key]; this.curr.play().catch(()=>{}); }
+                if(this.curr && this.curr !== tracks[key]) { 
+                    this.curr.pause(); 
+                    this.curr.currentTime=0; 
+                }
+                if(tracks[key]) { 
+                    this.curr = tracks[key]; 
+                    this.curr.play().catch(()=>{}); 
+                }
             },
-            stop: function() { if(this.curr) { this.curr.pause(); this.curr = null; } }
+            stop: function() { 
+                if(this.curr) { 
+                    this.curr.pause(); 
+                    this.curr = null; 
+                } 
+            }
         };
 
+        // Botão de Som
         document.getElementById('btnSound').onclick = function() {
             audioOn = !audioOn;
             this.innerHTML = audioOn ? '<i class="fas fa-volume-up fa-2x"></i>' : '<i class="fas fa-volume-mute fa-2x"></i>';
@@ -108,41 +147,79 @@
 
         keepScreenAwake();
 
+        // Geração do QR Code
         const url = window.location.href.replace('host.html', 'player.html');
-        document.getElementById('joinUrl').innerText = url;
-        document.getElementById('qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}`;
+        document.getElementById('joinUrl').innerText = url.replace('https://', '');
+        document.getElementById('qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`;
 
-        loadQuestions().then(data => questions = data);
+        // --- SINCRONIA DE PERGUNTAS (NOVO) ---
+        // Quando o Admin carregar um novo Quiz, a TV recebe aqui
+        onValue(ref(db, 'activeQuiz'), (snap) => {
+            const data = snap.val();
+            if(data) {
+                questions = data;
+                console.log("Quiz carregado na TV:", questions.length + " perguntas.");
+            }
+        });
 
+        // --- ESTADO DO JOGO ---
         onValue(ref(db, 'gameState'), (snap) => {
             const st = snap.val();
             if(!st) return;
 
+            // Esconde todas as telas
             ['lobby', 'game', 'leaderboard', 'podium'].forEach(id => document.getElementById(id).classList.add('hidden'));
 
+            // 1. LOBBY
             if(st.screen === 'lobby') {
                 document.getElementById('lobby').classList.remove('hidden');
                 Jukebox.play('lobby');
                 clearInterval(timerInt);
             }
+            
+            // 2. PERGUNTA (GAME)
             else if(st.screen === 'question') {
                 const gameDiv = document.getElementById('game');
                 gameDiv.classList.remove('hidden');
+                
+                // Proteção: Se a pergunta ainda não carregou
+                if(!questions || !questions[st.currentQuestion]) return;
+                
                 const q = questions[st.currentQuestion];
 
+                // Texto da Pergunta
                 document.getElementById('questionText').innerText = q.text;
 
+                // Gerenciar Mídia (Imagem/Video/Audio)
                 const box = document.getElementById('mediaContainer');
                 const img = document.getElementById('qImg');
                 const vid = document.getElementById('qVid');
                 const aud = document.getElementById('qAud');
                 
+                // Reseta mídia anterior
                 img.classList.add('hidden'); vid.classList.add('hidden'); vid.pause(); aud.pause(); box.classList.add('hidden');
 
-                if(q.image) { box.classList.remove('hidden'); img.src = q.image; img.classList.remove('hidden'); }
-                else if(q.video) { box.classList.remove('hidden'); vid.src = q.video; vid.classList.remove('hidden'); if(audioOn) vid.play(); }
-                else if(q.audio) { box.classList.remove('hidden'); img.src = "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjEx.../music_icon.gif"; img.classList.remove('hidden'); aud.src = q.audio; if(audioOn) aud.play(); }
+                if(q.image) { 
+                    box.classList.remove('hidden'); 
+                    img.src = q.image; 
+                    img.classList.remove('hidden'); 
+                }
+                else if(q.video) { 
+                    box.classList.remove('hidden'); 
+                    vid.src = q.video; 
+                    vid.classList.remove('hidden'); 
+                    if(audioOn) vid.play(); 
+                }
+                else if(q.audio) { 
+                    box.classList.remove('hidden'); 
+                    // Ícone de áudio animado
+                    img.src = "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjEx.../music_icon.gif"; 
+                    img.classList.remove('hidden'); 
+                    aud.src = q.audio; 
+                    if(audioOn) aud.play(); 
+                }
 
+                // Layout da Grade (2 ou 4 opções)
                 const grid = document.getElementById('ansGrid');
                 if(q.answers.length === 2) {
                     grid.style.gridTemplateColumns = "1fr 1fr";
@@ -154,29 +231,37 @@
                     document.getElementById('opt3').classList.remove('hidden');
                 }
 
+                // Renderiza os Textos das Opções e Limpa Barras
                 q.answers.forEach((ans, i) => {
                     const el = document.getElementById(`opt${i}`);
                     el.querySelector('.ans-text').innerText = ans;
-                    el.style.opacity = "1"; el.style.filter = "none"; el.style.border = "3px solid rgba(255,255,255,0.2)";
+                    // Reset estilo
+                    el.style.opacity = "1"; el.style.filter = "none"; el.style.border = "4px solid transparent"; el.style.transform = "scale(1)";
                     document.getElementById(`bar${i}`).style.height = "0";
                     document.getElementById(`count${i}`).style.opacity = "0";
                 });
 
+                // ESTADO: PENSANDO (Timer rodando)
                 if(st.endTime && !st.showResult) {
                     Jukebox.play('think');
                     startTimer(st.endTime);
-                } else if(st.showResult) {
+                } 
+                // ESTADO: RESULTADO (Mostra votos)
+                else if(st.showResult) {
                     clearInterval(timerInt);
                     document.getElementById('timerCircle').innerText = "0";
-                    vid.pause(); aud.pause();
+                    vid.pause(); aud.pause(); // Para vídeo se houver
 
+                    // Conta Votos
                     const votes = [0,0,0,0];
                     let total = 0;
                     playersList.forEach(p => { if(p.lastAnswer!=null) { votes[p.lastAnswer]++; total++; }});
 
+                    // Toca Som (Vitória ou Derrota Geral)
                     const correctVotes = votes[q.correct];
                     Jukebox.play(correctVotes > 0 ? 'win' : 'fail');
 
+                    // Anima as barras
                     q.answers.forEach((_, i) => {
                         const bar = document.getElementById(`bar${i}`);
                         const count = document.getElementById(`count${i}`);
@@ -185,56 +270,99 @@
                         count.innerText = votes[i]; count.style.opacity = "1";
                         bar.style.height = total > 0 ? (votes[i]/total)*100 + "%" : "0";
 
-                        if(i !== q.correct) { el.style.opacity = "0.4"; el.style.filter = "grayscale(1)"; }
-                        else { el.style.border = "5px solid white"; el.style.transform = "scale(1.05)"; }
+                        if(i !== q.correct) { 
+                            el.style.opacity = "0.4"; 
+                            el.style.filter = "grayscale(1)"; 
+                        } else { 
+                            el.style.border = "5px solid white"; 
+                            el.style.transform = "scale(1.05)"; 
+                            el.style.zIndex = "10";
+                        }
                     });
                 }
             }
+            
+            // 3. RANKING (Leaderboard)
             else if(st.screen === 'leaderboard') {
                 document.getElementById('leaderboard').classList.remove('hidden');
                 Jukebox.play('lobby'); 
                 const list = document.getElementById('leaderboardList');
                 list.innerHTML = '';
+                
+                // Mostra Top 5
                 playersList.slice(0,5).forEach((p, i) => {
                     const row = document.createElement('div');
                     row.className = 'leaderboard-row';
                     row.style.animationDelay = (i*0.1)+'s';
-                    row.innerHTML = `<div>#${i+1} ${p.avatar} ${p.name}</div><div>${p.score}</div>`;
+                    
+                    const medal = i===0 ? '🥇' : i===1 ? '🥈' : i===2 ? '🥉' : `#${i+1}`;
+                    
+                    row.innerHTML = `
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span style="font-size:2rem;">${medal}</span>
+                            <span>${p.avatar} ${p.name}</span>
+                            ${p.streak > 2 ? '🔥' : ''}
+                        </div>
+                        <div>${p.score}</div>
+                    `;
                     list.appendChild(row);
                 });
             }
+            
+            // 4. PÓDIO FINAL
             else if(st.screen === 'podium') {
                 document.getElementById('podium').classList.remove('hidden');
                 Jukebox.play('podium');
                 const top = playersList.slice(0,3);
+                
                 if(top[0]) { document.getElementById('p1Name').innerText = `${top[0].avatar} ${top[0].name}`; }
                 if(top[1]) { document.getElementById('p2Name').innerText = `${top[1].avatar} ${top[1].name}`; }
                 if(top[2]) { document.getElementById('p3Name').innerText = `${top[2].avatar} ${top[2].name}`; }
-                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
+                
+                // Chuva de confetes
+                const duration = 5000;
+                const end = Date.now() + duration;
+                (function frame() {
+                    confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 } });
+                    confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 } });
+                    if (Date.now() < end) requestAnimationFrame(frame);
+                }());
             }
         });
 
+        // --- LISTA DE JOGADORES (Lobby) ---
         onValue(ref(db, 'players'), (snap) => {
             const list = document.getElementById('playerList');
             playersList = []; list.innerHTML = '';
             snap.forEach(c => playersList.push(c.val()));
+            
+            // Ordena sempre por pontuação
             playersList.sort((a,b) => b.score - a.score);
+            
             document.getElementById('count').innerText = playersList.length;
+            
             playersList.forEach(p => {
                 const el = document.createElement('div');
-                el.style.cssText = "background:rgba(255,255,255,0.2); padding:8px 15px; border-radius:20px; font-weight:bold; backdrop-filter:blur(5px); color:white;";
+                el.style.cssText = "background:rgba(255,255,255,0.2); padding:8px 20px; border-radius:30px; font-weight:bold; backdrop-filter:blur(5px); color:white; display:flex; align-items:center; gap:8px; box-shadow:0 4px 10px rgba(0,0,0,0.1);";
                 el.innerText = `${p.avatar||'👤'} ${p.name}`;
                 list.appendChild(el);
             });
         });
 
+        // --- FUNÇÃO DO TIMER ---
         function startTimer(end) {
             if(timerInt) clearInterval(timerInt);
             timerInt = setInterval(() => {
                 const left = Math.ceil((end - Date.now())/1000);
                 const el = document.getElementById('timerCircle');
-                if(left<=0) { el.innerText="0"; clearInterval(timerInt); }
-                else { el.innerText = left; }
+                if(left<=0) { 
+                    el.innerText="0"; 
+                    clearInterval(timerInt); 
+                } else { 
+                    el.innerText = left; 
+                    if(left <= 5) el.classList.add('hurry');
+                    else el.classList.remove('hurry');
+                }
             }, 1000);
         }
     </script>
