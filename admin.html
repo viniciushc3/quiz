@@ -3,40 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin</title>
+    <title>Admin Pro</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body>
-    <div class="admin-container">
+<body class="admin-body">
+
+    <div id="screenSelection" style="padding: 20px;">
+        <h2 style="margin-bottom: 20px;">📂 Meus Quizzes</h2>
+        <div onclick="loadQ('./quizzes/geral.json')" class="q-item">
+            <div><i class="fas fa-brain"></i> Conhecimentos Gerais</div>
+            <i class="fas fa-chevron-right"></i>
+        </div>
+        <div onclick="loadQ('./quizzes/series.json')" class="q-item">
+            <div><i class="fas fa-film"></i> Séries e Filmes</div>
+            <i class="fas fa-chevron-right"></i>
+        </div>
+    </div>
+
+    <div id="screenControl" class="hidden" style="display:flex; flex-direction:column; height:100%;">
         
-        <div id="screenSelection">
-            <h2>📂 Escolha o Quiz</h2>
-            <div class="quiz-card" onclick="loadQ('./quizzes/geral.json')">
-                <span>🌍 Conhecimentos Gerais</span><span>🧠</span>
-            </div>
-             <div class="quiz-card" onclick="loadQ('./quizzes/series.json')">
-                <span>🎬 Filmes e Séries</span><span>🍿</span>
-            </div>
+        <div class="admin-header">
+            <h3 style="margin:0;"><i class="fas fa-gamepad"></i> Painel</h3>
+            <button onclick="location.reload()" class="btn-modern btn-outline" style="width: auto; padding: 5px 15px; font-size:0.8rem;">
+                <i class="fas fa-folder-open"></i> Trocar
+            </button>
         </div>
 
-        <div id="screenControl" class="hidden" style="display:flex; flex-direction:column; height:100%;">
-            <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                <h3>Controle</h3>
-                <button onclick="location.reload()" style="padding:5px;">📂 Voltar</button>
+        <div class="admin-content" id="qList">
             </div>
-            
-            <div class="admin-scroll" id="qList"></div>
 
-            <div style="padding-top:10px; border-top:1px solid #ccc;">
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px;">
-                    <button onclick="updateState('leaderboard')" class="btn blue" style="margin:0;">📊 Ranking</button>
-                    <button onclick="updateState('podium')" class="btn yellow" style="margin:0;">🏆 Pódio</button>
-                </div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; margin-top:5px;">
-                    <button onclick="updateState('lobby')" class="btn" style="margin:0; background:#555;">🏠 Lobby</button>
-                    <button onclick="nuke()" class="btn red" style="margin:0;">🗑️ Limpar</button>
-                </div>
-            </div>
+        <div class="admin-footer">
+            
+            <button onclick="forceFinish()" class="btn-modern btn-danger" style="grid-column: span 2; margin-bottom: 5px; background: #e17055;">
+                <i class="fas fa-stopwatch"></i> ENCERRAR TEMPO AGORA
+            </button>
+            <button onclick="updateState('lobby')" class="btn-modern btn-dark">
+                <i class="fas fa-home"></i> Lobby / Próx
+            </button>
+            
+            <button onclick="updateState('leaderboard')" class="btn-modern btn-primary">
+                <i class="fas fa-chart-bar"></i> Ranking
+            </button>
+
+            <button onclick="updateState('podium')" class="btn-modern btn-warning" style="grid-column: span 2;">
+                <i class="fas fa-trophy"></i> PÓDIO FINAL
+            </button>
+            
+            <button onclick="nuke()" class="btn-modern btn-outline" style="grid-column: span 2; margin-top:5px; opacity:0.7; border:1px solid #ff7675; color:#ff7675;">
+                <i class="fas fa-trash"></i> Resetar Sala
+            </button>
         </div>
     </div>
 
@@ -46,6 +62,8 @@
         let quizData = [];
         let timer = null;
         let qStartTime = 0;
+        let currentIdx = 0; // Armazena o índice atual para poder forçar o fim
+        
         const sfx = new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3');
 
         keepScreenAwake();
@@ -57,13 +75,24 @@
 
             const list = document.getElementById('qList');
             list.innerHTML = '';
+            
             quizData.forEach((q, i) => {
-                const btn = document.createElement('button');
-                btn.className = 'btn';
-                btn.style.background = "white"; btn.style.color = "#333"; btn.style.textAlign = "left";
-                btn.innerHTML = `<b>#${i+1}</b> ${q.text.substring(0,30)}...`;
-                btn.onclick = () => { sfx.play(); runQ(i); };
-                list.appendChild(btn);
+                const item = document.createElement('div');
+                item.className = 'q-item';
+                item.innerHTML = `
+                    <div style="display:flex; align-items:center;">
+                        <span class="q-number">#${i+1}</span>
+                        <span style="font-size:0.9rem;">${q.text.substring(0,35)}...</span>
+                    </div>
+                    <i class="fas fa-play" style="color:#ddd;"></i>
+                `;
+                item.onclick = () => {
+                    sfx.play();
+                    Array.from(list.children).forEach(c => c.classList.remove('active'));
+                    item.classList.add('active');
+                    runQ(i);
+                };
+                list.appendChild(item);
             });
 
             document.getElementById('screenSelection').classList.add('hidden');
@@ -71,26 +100,56 @@
             updateState('lobby');
         }
 
-        window.updateState = (screen) => { update(ref(db, 'gameState'), { screen: screen }); }
-        window.nuke = () => { if(confirm("Zerar?")) set(ref(db, 'players'), {}); }
+        window.updateState = (screen) => { 
+            sfx.play();
+            update(ref(db, 'gameState'), { screen: screen }); 
+        }
+        
+        window.nuke = () => { if(confirm("Tem certeza que quer expulsar todos?")) set(ref(db, 'players'), {}); }
+
+        // --- FUNÇÃO PARA FORÇAR O FIM DO TEMPO ---
+        window.forceFinish = function() {
+            if(timer) {
+                console.log("Encerrando tempo manualmente...");
+                clearTimeout(timer); // Para o relógio automático
+                finishQ(currentIdx); // Chama a finalização imediatamente
+            }
+        }
+        // -----------------------------------------
 
         window.runQ = async function(idx) {
             if(timer) clearTimeout(timer);
-            qStartTime = Date.now();
-            const timeLimit = 20;
             
+            currentIdx = idx; // Salva qual é a pergunta atual
+            qStartTime = Date.now();
+            const timeLimit = 30; // 30 Segundos
+
             // Resetar Players
             const pSnap = await get(ref(db, 'players'));
             const updates = {};
-            if(pSnap.exists()) pSnap.forEach(c => { updates[`players/${c.key}/lastAnswer`] = null; updates[`players/${c.key}/status`] = 'thinking'; updates[`players/${c.key}/answerTime`] = null; });
+            if(pSnap.exists()) pSnap.forEach(c => { 
+                updates[`players/${c.key}/lastAnswer`] = null; 
+                updates[`players/${c.key}/status`] = 'thinking'; 
+                updates[`players/${c.key}/answerTime`] = null; 
+            });
             
-            updates['gameState'] = { screen: 'question', currentQuestion: idx, showResult: false, endTime: qStartTime+(timeLimit*1000) };
+            updates['gameState'] = { 
+                screen: 'question', 
+                currentQuestion: idx, 
+                showResult: false, 
+                endTime: qStartTime+(timeLimit*1000) 
+            };
             await update(ref(db), updates);
 
+            // Inicia o timer automático
             timer = setTimeout(() => finishQ(idx), timeLimit*1000);
         }
 
         async function finishQ(idx) {
+            // Garante que o timer seja limpo caso a função seja chamada manualmente
+            if(timer) clearTimeout(timer);
+            timer = null;
+
             const pSnap = await get(ref(db, 'players'));
             const correct = quizData[idx].correct;
             const updates = {};
@@ -101,11 +160,12 @@
                 if(p.lastAnswer === correct) {
                     const streak = (p.streak||0) + 1;
                     
-                    // Pontos por tempo
-                    let taken = (p.answerTime || (qStartTime+20000)) - qStartTime;
-                    if(taken < 0) taken = 0; if(taken > 20000) taken = 20000;
-                    const bonus = Math.floor(500 * (1 - (taken/20000)));
+                    // Cálculo de bônus por tempo (baseado em 30s)
+                    let taken = (p.answerTime || (qStartTime+30000)) - qStartTime;
+                    if(taken < 0) taken = 0; 
+                    if(taken > 30000) taken = 30000;
                     
+                    const bonus = Math.floor(500 * (1 - (taken/30000)));
                     updates[`players/${c.key}/score`] = (p.score||0) + 500 + bonus + (streak>2?200:0);
                     updates[`players/${c.key}/streak`] = streak;
                     updates[`players/${c.key}/status`] = 'correct';
