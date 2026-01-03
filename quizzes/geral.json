@@ -1,0 +1,24 @@
+[
+    {
+        "text": "Qual a capital da França?",
+        "answers": ["Berlim", "Paris", "Madri", "Lisboa"],
+        "correct": 1
+    },
+    {
+        "text": "Quem pintou este quadro?",
+        "image": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/ec/Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg/300px-Mona_Lisa%2C_by_Leonardo_da_Vinci%2C_from_C2RMF_retouched.jpg",
+        "answers": ["Van Gogh", "Da Vinci", "Picasso", "Michelangelo"],
+        "correct": 1
+    },
+    {
+        "text": "Qual som é este?",
+        "audio": "https://www.soundjay.com/nature/sounds/rain-01.mp3",
+        "answers": ["Fogo", "Vento", "Chuva", "Mar"],
+        "correct": 2
+    },
+    {
+        "text": "O tomate é uma fruta?",
+        "answers": ["Verdadeiro", "Falso"],
+        "correct": 0
+    }
+]
