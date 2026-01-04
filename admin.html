@@ -3,26 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin - Controle</title>
+    <title>Admin Auto</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* CSS Específico do Menu Admin para garantir que apareça */
         .grid-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
         .quiz-card { 
-            background: white; padding: 20px; border-radius: 10px; 
+            background: white; padding: 15px; border-radius: 10px; 
             box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer;
             text-align: left; transition: transform 0.1s;
-            border-left: 5px solid #333;
+            border-left: 5px solid #333; display: flex; justify-content: space-between; align-items: center;
         }
         .quiz-card:active { transform: scale(0.98); background: #f9f9f9; }
-        .quiz-card h3 { margin: 0; font-size: 1rem; color: #333; }
-        .quiz-card p { margin: 5px 0 0 0; font-size: 0.8rem; color: #666; }
-        
-        /* Cores das Bordas */
-        .border-blue { border-left-color: #45a3e5; }
-        .border-red { border-left-color: #e21b3c; }
-        .border-green { border-left-color: #26890c; }
-        .border-yellow { border-left-color: #ffc00a; }
+        .q-info h3 { margin: 0; font-size: 1rem; color: #333; }
+        .q-info p { margin: 3px 0 0 0; font-size: 0.75rem; color: #666; }
+        .q-icon { font-size: 1.8rem; }
     </style>
 </head>
 <body>
@@ -30,50 +24,25 @@
         
         <div id="screenSelection">
             <h2 style="padding: 0 10px; margin-bottom: 5px;">📂 Selecione o Quiz</h2>
-            <p style="padding: 0 10px; color: #666; font-size: 0.9rem;">Certifique-se que os arquivos JSON existem.</p>
+            <p style="padding: 0 10px; color: #666; font-size: 0.9rem;">Carregando lista...</p>
             
-            <div class="grid-menu">
-                <div class="quiz-card border-blue" onclick="loadQ('./quizzes/geral.json')">
-                    <h3>🌍 Geral</h3>
-                    <p>Perguntas Variadas</p>
-                </div>
-
-                <div class="quiz-card border-red" onclick="loadQ('./quizzes/series.json')">
-                    <h3>🎬 Séries</h3>
-                    <p>Filmes e TV</p>
-                </div>
-
-                <div class="quiz-card border-green" onclick="loadQ('./quizzes/geek.json')">
-                    <h3>👾 Geek</h3>
-                    <p>Games e Tech</p>
-                </div>
-
-                <div class="quiz-card border-yellow" onclick="loadQ('./quizzes/familia.json')">
-                    <h3>👨‍👩‍👧‍👦 Família</h3>
-                    <p>Nosso Quiz</p>
-                </div>
-            </div>
+            <div class="grid-menu" id="quizMenuContainer"></div>
         </div>
 
         <div id="screenControl" class="hidden" style="display:flex; flex-direction:column; height:100%;">
-            <div style="background:#333; color:white; padding:15px; display:flex; justify-content:space-between; align-items:center; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 10;">
-                <span id="statusBar" style="font-weight:bold;">Aguardando...</span>
-                <button onclick="changeQuiz()" style="font-size:0.8rem; padding:5px 10px; background:#555; border:1px solid #777; color:white; border-radius:4px; cursor:pointer;">Trocar</button>
+            <div style="background:#333; color:white; padding:15px; display:flex; justify-content:space-between; align-items:center;">
+                <span id="statusBar" style="font-weight:bold;">Pronto</span>
+                <button onclick="location.reload()" style="font-size:0.8rem; padding:5px 10px; background:#555; border:1px solid #777; color:white; border-radius:4px;">Trocar</button>
             </div>
             
             <div class="admin-scroll" id="qList" style="background: #f0f2f5;"></div>
 
-            <div style="padding:15px; background:white; border-top:1px solid #ddd; box-shadow: 0 -4px 10px rgba(0,0,0,0.05);">
-                
-                <button id="btnNextAction" onclick="updateState('lobby')" class="btn" style="background:#555; margin-bottom:10px; border:2px solid #333; font-weight:bold;">
-                    🏠 Ir para o Lobby
-                </button>
-
+            <div style="padding:15px; background:white; border-top:1px solid #ddd;">
+                <button id="btnNextAction" onclick="updateState('lobby')" class="btn" style="background:#555; margin-bottom:10px; border:2px solid #333; font-weight:bold;">🏠 Ir para o Lobby</button>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                     <button onclick="updateState('leaderboard')" class="btn blue" style="margin:0; font-size:0.9rem;">📊 Ranking</button>
                     <button onclick="updateState('podium')" class="btn yellow" style="margin:0; font-size:0.9rem;">🏆 Pódio</button>
                 </div>
-                
                 <div style="margin-top:10px;">
                     <button onclick="nuke()" class="btn red" style="margin:0; font-size:0.8rem; padding: 10px;">🗑️ Zerar Jogadores</button>
                 </div>
@@ -89,122 +58,118 @@
         let qStartTime = 0;
         let isQuestionRunning = false;
         let playerListener = null;
-        
         const sfx = new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3');
+        
         keepScreenAwake();
 
-        // 1. FUNÇÃO DE CARREGAR (Com Alerta de Erro)
+        // --- INICIALIZAÇÃO: Carregar Menu Automaticamente ---
+        window.onload = async function() {
+            const container = document.getElementById('quizMenuContainer');
+            const statusText = document.querySelector('#screenSelection p');
+
+            try {
+                // Tenta carregar o índice
+                const response = await fetch('./quizzes/index.json?nocache=' + Date.now()); // nocache evita cache velho
+                if (!response.ok) throw new Error("Arquivo index.json não encontrado");
+                
+                const quizzes = await response.json();
+                
+                container.innerHTML = ''; // Limpa
+                
+                quizzes.forEach(q => {
+                    const card = document.createElement('div');
+                    card.className = 'quiz-card';
+                    card.style.borderLeftColor = q.color || '#333'; // Cor dinâmica
+                    
+                    card.innerHTML = `
+                        <div class="q-info">
+                            <h3>${q.title}</h3>
+                            <p>${q.desc}</p>
+                        </div>
+                        <div class="q-icon">${q.icon}</div>
+                    `;
+                    
+                    // Ao clicar, carrega o arquivo definido no JSON
+                    card.onclick = () => loadQ(`./quizzes/${q.file}`);
+                    
+                    container.appendChild(card);
+                });
+
+                statusText.innerText = "Escolha um tema abaixo:";
+
+            } catch (error) {
+                console.error(error);
+                statusText.innerText = "Erro: Crie o arquivo quizzes/index.json";
+                container.innerHTML = `<button class="btn red" onclick="location.reload()">Tentar Novamente</button>`;
+            }
+        }
+
+        // --- CARREGAR PERGUNTAS DO QUIZ ESCOLHIDO ---
         window.loadQ = async function(path) {
             sfx.play();
             try {
-                // Tenta carregar
                 quizData = await loadQuestions(path);
-                
-                // Validação
-                if(!quizData || quizData.length === 0) {
-                    alert(`ERRO: O arquivo "${path}" está vazio ou não existe.\nVerifique a pasta 'quizzes'.`);
-                    return;
-                }
+                if(!quizData || quizData.length === 0) return alert("Quiz vazio ou erro ao carregar JSON.");
 
-                // Renderiza Botões
                 const list = document.getElementById('qList');
-                list.innerHTML = '';
-                
-                // Cabeçalho da lista
-                const header = document.createElement('div');
-                header.style.padding = "10px"; header.style.color="#666"; header.innerText = "Toque para lançar:";
-                list.appendChild(header);
+                list.innerHTML = `<div style="padding:10px; color:#666;">Toque para lançar:</div>`;
 
                 quizData.forEach((q, i) => {
                     const btn = document.createElement('button');
-                    btn.id = `btnQ${i}`;
-                    btn.className = 'btn';
-                    btn.style.background = "white"; 
-                    btn.style.color = "#333"; 
-                    btn.style.textAlign = "left";
-                    btn.style.marginBottom = "5px";
-                    btn.style.boxShadow = "0 2px 2px rgba(0,0,0,0.1)";
+                    btn.id = `btnQ${i}`; btn.className = 'btn';
+                    btn.style.background = "white"; btn.style.color = "#333"; btn.style.textAlign = "left"; btn.style.marginBottom = "5px"; btn.style.boxShadow = "0 2px 2px rgba(0,0,0,0.1)";
                     btn.innerHTML = `<b style="color:#45a3e5">#${i+1}</b> ${q.text.substring(0,25)}...`;
                     btn.onclick = () => { sfx.play(); runQ(i); };
                     list.appendChild(btn);
                 });
 
-                // Troca Tela
                 document.getElementById('screenSelection').classList.add('hidden');
                 document.getElementById('screenControl').classList.remove('hidden');
                 updateState('lobby');
-
-            } catch (e) {
-                alert("Erro grave ao carregar: " + e.message);
-            }
-        }
-
-        window.changeQuiz = function() {
-            if(confirm("Sair deste quiz?")) {
-                document.getElementById('screenControl').classList.add('hidden');
-                document.getElementById('screenSelection').classList.remove('hidden');
-                updateState('lobby');
-            }
+            } catch (e) { alert("Erro: " + e.message); }
         }
 
         window.updateState = (screen) => { 
             if(playerListener) { off(ref(db, 'players'), playerListener); playerListener = null; }
             if(timer) clearTimeout(timer);
-            
             update(ref(db, 'gameState'), { screen: screen });
-
             const btn = document.getElementById('btnNextAction');
             if(screen === 'lobby') {
-                btn.innerText = "⏳ Aguardando Jogadores...";
-                btn.style.background = "#555";
-                btn.onclick = () => alert("Selecione uma pergunta da lista abaixo!");
+                btn.innerText = "⏳ Aguardando Jogadores..."; btn.style.background = "#555";
+                btn.onclick = () => alert("Selecione uma pergunta!");
             }
         }
 
-        window.nuke = () => { if(confirm("Certeza? Isso apaga todos os pontos.")) set(ref(db, 'players'), {}); }
+        window.nuke = () => { if(confirm("Apagar jogadores?")) set(ref(db, 'players'), {}); }
 
         window.runQ = async function(idx) {
              if(timer) clearTimeout(timer);
              if(playerListener) off(ref(db, 'players'), playerListener);
+             isQuestionRunning = true; qStartTime = Date.now();
              
-             isQuestionRunning = true; 
-             qStartTime = Date.now();
-             
-             // Feedback Visual
              document.querySelectorAll('#qList button').forEach(b => b.style.background = "white");
-             const currentBtn = document.getElementById(`btnQ${idx}`);
-             if(currentBtn) currentBtn.style.background = "#e6f4ff";
+             document.getElementById(`btnQ${idx}`).style.background = "#e6f4ff";
+             document.getElementById('statusBar').innerText = `Pergunta ${idx+1}...`;
 
-             document.getElementById('statusBar').innerText = `Pergunta ${idx+1} rolando...`;
-
-             // Reset Players
              const pSnap = await get(ref(db, 'players'));
              const updates = {};
-             if(pSnap.exists()) pSnap.forEach(c => { 
-                 updates[`players/${c.key}/lastAnswer`] = null; 
-                 updates[`players/${c.key}/status`] = 'thinking'; 
-                 updates[`players/${c.key}/answerTime`] = null; 
-             });
-             
+             if(pSnap.exists()) pSnap.forEach(c => { updates[`players/${c.key}/lastAnswer`] = null; updates[`players/${c.key}/status`] = 'thinking'; updates[`players/${c.key}/answerTime`] = null; });
              updates['gameState'] = { screen: 'question', currentQuestion: idx, showResult: false, endTime: qStartTime+20000 };
              await update(ref(db), updates);
 
-             // Monitoramento
              playerListener = onValue(ref(db, 'players'), (snap) => {
                  if(!isQuestionRunning) return;
                  const ps = snap.val(); if(!ps) return;
                  let ans=0, tot=0;
                  Object.values(ps).forEach(p => { tot++; if(p.lastAnswer!=null) ans++; });
-                 document.getElementById('statusBar').innerText = `Respondido: ${ans} / ${tot}`;
+                 document.getElementById('statusBar').innerText = `Resp: ${ans}/${tot}`;
                  if(tot>0 && ans>=tot) finishQ(idx);
              });
-
              timer = setTimeout(() => { if(isQuestionRunning) finishQ(idx); }, 20000);
         }
 
         async function finishQ(idx) {
-            if(!isQuestionRunning) return; 
-            isQuestionRunning = false;
+            if(!isQuestionRunning) return; isQuestionRunning = false;
             if(playerListener) off(ref(db, 'players'), playerListener); clearTimeout(timer);
             
             const pSnap = await get(ref(db, 'players'));
@@ -225,21 +190,16 @@
                 }
             });
             await update(ref(db), updates);
-            document.getElementById('statusBar').innerText = "Tempo Esgotado / Encerrado";
+            document.getElementById('statusBar').innerText = "Encerrado.";
             
-            // Botão Próxima Pergunta
             const nextIdx = idx+1;
             const btn = document.getElementById('btnNextAction');
             if(nextIdx < quizData.length) {
-                btn.innerText = `➡️ Lançar Pergunta ${nextIdx+1}`;
+                btn.innerText = `➡️ Lançar Pergunta ${nextIdx+1}`; btn.style.background = "#26890c";
                 btn.onclick = () => { sfx.play(); runQ(nextIdx); };
-                btn.style.background = "#26890c";
-                const el = document.getElementById(`btnQ${nextIdx}`); 
-                if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
+                const el = document.getElementById(`btnQ${nextIdx}`); if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
             } else {
-                btn.innerText = "🏆 Ir para Pódio";
-                btn.onclick = () => updateState('podium');
-                btn.style.background = "#ffc00a"; btn.style.color="black";
+                btn.innerText = "🏆 Ir para Pódio"; btn.style.background = "#ffc00a"; btn.onclick = () => updateState('podium');
             }
         }
     </script>
