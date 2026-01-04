@@ -7,13 +7,6 @@
         "color": "#45a3e5"
     },
     {
-        "file": "series.json",
-        "title": "Filmes e Séries",
-        "desc": "Cinema e Netflix",
-        "icon": "🎬",
-        "color": "#e21b3c"
-    },
-    {
         "file": "geek.json",
         "title": "Mundo Geek",
         "desc": "Games e Animes",
