@@ -14,43 +14,24 @@
         <img id="qrCode" src="" style="border: 8px solid white; border-radius: 15px; margin: 10px; width: 250px;">
         <h2 id="joinUrl" style="background:rgba(255,255,255,0.1); padding:10px 30px; border-radius:50px; font-family: monospace;"></h2>
         <div style="margin-top:20px; width: 100%;">
-            <h3>Jogadores: <span id="count" style="color:#45a3e5; font-size:2rem;">0</span></h3>
+            <h3>Jogadores (<span id="count">0</span>):</h3>
             <div id="playerList" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width:900px; margin: 0 auto;"></div>
         </div>
     </div>
 
     <div id="game" class="host-container hidden">
         <div id="timerCircle"></div>
-        
         <div class="media-box hidden" id="mediaContainer" style="display:flex; justify-content:center; width:100%; margin-bottom:10px;">
             <img id="qImg" class="hidden" style="max-height:35vh; border-radius:10px; border:4px solid white;">
             <video id="qVid" class="hidden" style="max-height:35vh; border-radius:10px;" loop playsinline></video>
             <audio id="qAud"></audio>
         </div>
-
         <h1 id="questionText">Aguardando...</h1>
-        
         <div class="answers-grid" id="ansGrid">
-            <div class="ans-card red" id="opt0">
-                <span class="ans-text">A</span>
-                <div class="result-bar" id="bar0"></div>
-                <div class="vote-count" id="count0">0</div>
-            </div>
-            <div class="ans-card blue" id="opt1">
-                <span class="ans-text">B</span>
-                <div class="result-bar" id="bar1"></div>
-                <div class="vote-count" id="count1">0</div>
-            </div>
-            <div class="ans-card yellow" id="opt2">
-                <span class="ans-text">C</span>
-                <div class="result-bar" id="bar2"></div>
-                <div class="vote-count" id="count2">0</div>
-            </div>
-            <div class="ans-card green" id="opt3">
-                <span class="ans-text">D</span>
-                <div class="result-bar" id="bar3"></div>
-                <div class="vote-count" id="count3">0</div>
-            </div>
+            <div class="ans-card red" id="opt0"><span class="ans-text">A</span><div class="result-bar" id="bar0"></div><div class="vote-count" id="count0">0</div></div>
+            <div class="ans-card blue" id="opt1"><span class="ans-text">B</span><div class="result-bar" id="bar1"></div><div class="vote-count" id="count1">0</div></div>
+            <div class="ans-card yellow" id="opt2"><span class="ans-text">C</span><div class="result-bar" id="bar2"></div><div class="vote-count" id="count2">0</div></div>
+            <div class="ans-card green" id="opt3"><span class="ans-text">D</span><div class="result-bar" id="bar3"></div><div class="vote-count" id="count3">0</div></div>
         </div>
     </div>
 
@@ -60,23 +41,16 @@
     </div>
 
     <div id="podium" class="host-container hidden" style="background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);">
-        <h1 style="font-size:4rem; margin-bottom:30px;">🏆 Vencedores 🏆</h1>
+        <h1>🏆 Vencedores 🏆</h1>
         <div class="podium-stage">
-            <div class="podium-bar" id="p2Box" style="width:20%; height:50%; background:#c0c0c0; visibility:hidden;">
-                <div id="p2Name" style="font-weight:bold; margin-bottom:10px;"></div>
-                <div style="font-size:3rem;">2º</div>
-                <div id="p2Score" style="background:rgba(0,0,0,0.3); padding:5px; border-radius:10px;">0</div>
+            <div class="podium-bar" id="p2Box" style="width:20%; height:50%; background:#c0c0c0; opacity:0;">
+                <div id="p2Name" style="font-weight:bold; margin-bottom:10px;"></div><div style="font-size:3rem;">2º</div><div id="p2Score" style="background:rgba(0,0,0,0.3); padding:5px; border-radius:10px;">0</div>
             </div>
-            <div class="podium-bar" id="p1Box" style="width:25%; height:70%; background:#ffd700; visibility:hidden;">
-                <div style="font-size:4rem;">👑</div>
-                <div id="p1Name" style="font-weight:bold; font-size:1.8rem; margin-bottom:10px;"></div>
-                <div style="font-size:5rem; line-height:1;">1º</div>
-                <div id="p1Score" style="background:rgba(0,0,0,0.3); padding:5px; border-radius:10px;">0</div>
+            <div class="podium-bar" id="p1Box" style="width:25%; height:70%; background:#ffd700; opacity:0;">
+                <div style="font-size:4rem;">👑</div><div id="p1Name" style="font-weight:bold; font-size:1.8rem; margin-bottom:10px;"></div><div style="font-size:5rem; line-height:1;">1º</div><div id="p1Score" style="background:rgba(0,0,0,0.3); padding:5px; border-radius:10px;">0</div>
             </div>
-            <div class="podium-bar" id="p3Box" style="width:20%; height:40%; background:#cd7f32; visibility:hidden;">
-                <div id="p3Name" style="font-weight:bold; margin-bottom:10px;"></div>
-                <div style="font-size:3rem;">3º</div>
-                <div id="p3Score" style="background:rgba(0,0,0,0.3); padding:5px; border-radius:10px;">0</div>
+            <div class="podium-bar" id="p3Box" style="width:20%; height:40%; background:#cd7f32; opacity:0;">
+                <div id="p3Name" style="font-weight:bold; margin-bottom:10px;"></div><div style="font-size:3rem;">3º</div><div id="p3Score" style="background:rgba(0,0,0,0.3); padding:5px; border-radius:10px;">0</div>
             </div>
         </div>
     </div>
@@ -84,7 +58,7 @@
     <script type="module">
         import { db, ref, onValue, keepScreenAwake } from './game.js';
 
-        let playersList = [];
+        let playersList = []; // Lista Global de Jogadores
         let timerInt = null;
         let audioOn = false;
 
@@ -122,19 +96,27 @@
         document.getElementById('joinUrl').innerText = url;
         document.getElementById('qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}`;
 
-        // --- LISTA DE JOGADORES (LOBBY + DADOS PÓDIO) ---
+        // ==========================================
+        // 1. MONITORAMENTO DE JOGADORES (Correção)
+        // ==========================================
         onValue(ref(db, 'players'), (snap) => {
             const list = document.getElementById('playerList');
-            playersList = []; 
-            list.innerHTML = '';
+            playersList = []; // Zera a lista global
+            list.innerHTML = ''; // Limpa visual do lobby
+
+            snap.forEach(c => {
+                playersList.push(c.val());
+            });
+
+            // Ordena sempre do maior para o menor (Converte para int para garantir)
+            playersList.sort((a,b) => (parseInt(b.score) || 0) - (parseInt(a.score) || 0));
             
-            snap.forEach(c => playersList.push(c.val()));
-            
-            // Ordena sempre do maior para o menor
-            playersList.sort((a,b) => (b.score || 0) - (a.score || 0));
-            
+            // Debug para você ver no console (Aperte F12 na TV)
+            console.log("Jogadores atualizados:", playersList.length, playersList);
+
             document.getElementById('count').innerText = playersList.length;
 
+            // Renderiza Lobby
             playersList.forEach(p => {
                 const el = document.createElement('div');
                 el.style.cssText = "background:rgba(255,255,255,0.2); padding:8px 15px; border-radius:20px; font-weight:bold; display:flex; align-items:center; gap:5px;";
@@ -142,17 +124,57 @@
                 list.appendChild(el);
             });
 
-            // Se o pódio estiver visível, atualiza ele em tempo real
-            if(!document.getElementById('podium').classList.contains('hidden')) {
-                updatePodiumDisplay();
-            }
+            // Se estivermos em telas de ranking, atualiza em tempo real
+            const st = document.querySelector('.host-container:not(.hidden)');
+            if(st && st.id === 'leaderboard') renderLeaderboard();
+            if(st && st.id === 'podium') renderPodium();
         });
 
-        // --- ESTADO DO JOGO ---
+        // ==========================================
+        // 2. FUNÇÕES DE RENDERIZAÇÃO SEPARADAS
+        // ==========================================
+        function renderLeaderboard() {
+            const list = document.getElementById('leaderboardList');
+            list.innerHTML = '';
+            // Pega top 5
+            playersList.slice(0,5).forEach((p, i) => {
+                const row = document.createElement('div');
+                row.className = 'leaderboard-row';
+                // Animação leve
+                setTimeout(() => row.style.opacity = 1, i * 100); 
+                row.innerHTML = `<div>#${i+1} ${p.avatar||''} ${p.name}</div><div>${p.score}</div>`;
+                list.appendChild(row);
+            });
+        }
+
+        function renderPodium() {
+            const top = playersList.slice(0, 3);
+            
+            const fill = (idx, idPrefix) => {
+                const p = top[idx];
+                const box = document.getElementById(idPrefix+'Box');
+                
+                if(p) {
+                    box.style.opacity = "1"; // Mostra
+                    document.getElementById(idPrefix+'Name').innerText = `${p.avatar || ''} ${p.name}`;
+                    document.getElementById(idPrefix+'Score').innerText = p.score || 0;
+                } else {
+                    box.style.opacity = "0"; // Esconde suavemente se não existir
+                }
+            }
+            fill(0, 'p1'); // 1º
+            fill(1, 'p2'); // 2º
+            fill(2, 'p3'); // 3º
+        }
+
+        // ==========================================
+        // 3. ESTADO DO JOGO
+        // ==========================================
         onValue(ref(db, 'gameState'), (snap) => {
             const st = snap.val();
             if(!st) return;
 
+            // Esconde tudo
             ['lobby', 'game', 'leaderboard', 'podium'].forEach(id => document.getElementById(id).classList.add('hidden'));
 
             if(st.screen === 'lobby') {
@@ -164,7 +186,7 @@
                 document.getElementById('game').classList.remove('hidden');
                 
                 const q = st.questionData; 
-                if(!q) return;
+                if(!q) return; // Segurança
 
                 document.getElementById('questionText').innerText = q.text;
 
@@ -180,6 +202,7 @@
                 else if(q.video) { box.classList.remove('hidden'); vid.src = q.video; vid.classList.remove('hidden'); if(audioOn) vid.play(); }
                 else if(q.audio) { box.classList.remove('hidden'); img.src = "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjEx.../music_icon.gif"; img.classList.remove('hidden'); aud.src = q.audio; if(audioOn) aud.play(); }
 
+                // Grid
                 const grid = document.getElementById('ansGrid');
                 if(q.answers && q.answers.length === 2) {
                     grid.classList.add('two-options');
@@ -191,6 +214,7 @@
                     document.getElementById('opt3').classList.remove('hidden');
                 }
 
+                // Opções
                 if(q.answers) {
                     q.answers.forEach((ans, i) => {
                         const el = document.getElementById(`opt${i}`);
@@ -232,45 +256,20 @@
                     });
                 }
             }
+            // RANKING (Força renderização ao entrar)
             else if(st.screen === 'leaderboard') {
                 document.getElementById('leaderboard').classList.remove('hidden');
                 Jukebox.play('lobby');
-                const list = document.getElementById('leaderboardList');
-                list.innerHTML = '';
-                playersList.slice(0,5).forEach((p, i) => {
-                    const row = document.createElement('div');
-                    row.className = 'leaderboard-row';
-                    row.style.animationDelay = (i*0.1)+'s';
-                    row.innerHTML = `<div>#${i+1} ${p.avatar} ${p.name}</div><div>${p.score}</div>`;
-                    list.appendChild(row);
-                });
+                renderLeaderboard(); // CHAMA EXPLÍCITO AQUI
             }
+            // PÓDIO (Força renderização ao entrar)
             else if(st.screen === 'podium') {
                 document.getElementById('podium').classList.remove('hidden');
                 Jukebox.play('podium');
-                updatePodiumDisplay();
+                renderPodium(); // CHAMA EXPLÍCITO AQUI
                 confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
             }
         });
-
-        // Função de Atualização do Pódio
-        function updatePodiumDisplay() {
-            const top = playersList.slice(0, 3);
-            const fill = (idx, idPrefix) => {
-                const p = top[idx];
-                const box = document.getElementById(idPrefix+'Box');
-                if(p) {
-                    box.style.visibility = "visible";
-                    document.getElementById(idPrefix+'Name').innerText = `${p.avatar || ''} ${p.name}`;
-                    document.getElementById(idPrefix+'Score').innerText = p.score || 0;
-                } else {
-                    box.style.visibility = "hidden";
-                }
-            }
-            fill(0, 'p1');
-            fill(1, 'p2');
-            fill(2, 'p3');
-        }
 
         function startTimer(end) {
             if(timerInt) clearInterval(timerInt);
