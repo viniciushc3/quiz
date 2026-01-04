@@ -3,15 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Quiz</title>
+    <title>Super Quiz</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Estilos exclusivos da Intro */
+        .intro-body {
+            background: radial-gradient(circle, #2b32b2 0%, #1488cc 100%);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+        }
+        .big-title {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            text-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            animation: popIn 1s ease-out;
+        }
+        .start-btn {
+            background: #ffc00a;
+            color: #333;
+            font-size: 2rem;
+            font-weight: bold;
+            padding: 20px 60px;
+            border-radius: 50px;
+            text-decoration: none;
+            box-shadow: 0 0 20px rgba(255, 192, 10, 0.6);
+            transition: all 0.3s;
+            animation: pulseBtn 2s infinite;
+        }
+        .start-btn:hover {
+            transform: scale(1.1);
+            background: #fff;
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.8);
+        }
+        @keyframes pulseBtn {
+            0% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 192, 10, 0.6); }
+            50% { transform: scale(1.05); box-shadow: 0 0 40px rgba(255, 192, 10, 0.8); }
+            100% { transform: scale(1); box-shadow: 0 0 20px rgba(255, 192, 10, 0.6); }
+        }
+        .sub-links {
+            margin-top: 50px;
+            opacity: 0.6;
+            font-size: 0.9rem;
+        }
+        .sub-links a { color: white; text-decoration: none; margin: 0 10px; }
+        .sub-links a:hover { text-decoration: underline; opacity: 1; }
+    </style>
 </head>
-<body>
-    <div style="display:flex; flex-direction:column; justify-content:center; height:100vh; padding:20px;">
-        <h1>Super Quiz</h1>
-        <a href="player.html" class="btn blue">📱 Jogador</a>
-        <a href="host.html" class="btn yellow">📺 TV (Host)</a>
-        <a href="admin.html" class="btn" style="background:#555;">⚙️ Admin</a>
+<body class="intro-body">
+    
+    <div class="big-title">SUPER QUIZ</div>
+    
+    <a href="host.html" class="start-btn">📺 INICIAR TV</a>
+    
+    <p style="margin-top: 20px; font-size: 1.2rem;">
+        Conecte a TV e peça para os jogadores escanearem o QR Code.
+    </p>
+
+    <div class="sub-links">
+        <a href="admin.html">Acesso Admin</a> • 
+        <a href="player.html">Teste Jogador</a>
     </div>
+
 </body>
 </html>
