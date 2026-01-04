@@ -1,305 +1,105 @@
-/* --- 1. IMPORTAÇÃO DE FONTES E RESET GLOBAL --- */
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;800&display=swap');
-
-* { 
-    box-sizing: border-box; 
-    user-select: none; 
-    -webkit-tap-highlight-color: transparent; 
-}
-
+/* --- GLOBAL --- */
+* { box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; }
 body { 
-    font-family: 'Poppins', sans-serif; 
+    font-family: 'Segoe UI', Roboto, sans-serif; 
     margin: 0; 
-    overflow: hidden; /* Impede scroll indesejado na TV/Player */
-    background: #1a1a1a;
-    color: white;
+    background: #f4f4f9; /* Fundo claro moderno */
+    color: #333; 
+    overflow: hidden; 
 }
 
 .hidden { display: none !important; }
 
-/* --- 2. ANIMAÇÕES (KEYFRAMES) --- */
-@keyframes slideIn {
-    0% { opacity: 0; transform: translateY(20px) scale(0.95); }
-    100% { opacity: 1; transform: translateY(0) scale(1); }
-}
-
-@keyframes popIn {
-    0% { opacity: 0; transform: scale(0.5); }
-    60% { transform: scale(1.1); }
-    100% { opacity: 1; transform: scale(1); }
-}
-
-@keyframes gradientBG {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
-@keyframes pulse {
-    0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(226, 27, 60, 0.7); }
-    70% { transform: scale(1.1); box-shadow: 0 0 0 10px rgba(226, 27, 60, 0); }
-    100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(226, 27, 60, 0); }
-}
-
-/* --- 3. UTILITÁRIOS VISUAIS --- */
-
-/* Fundo Animado da TV */
-.tv-bg {
-    background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
-    background-size: 400% 400%;
-    animation: gradientBG 15s ease infinite;
-    height: 100vh;
-    width: 100vw;
-}
-
-/* Efeito de Vidro (Glassmorphism) */
-.glass-panel {
-    background: rgba(255, 255, 255, 0.15);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-radius: 20px;
-    border: 1px solid rgba(255, 255, 255, 0.18);
-    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
-    padding: 20px;
-    margin: 10px;
-}
-
-/* Cores das Respostas (Gradientes Vibrantes) */
-.red { background: linear-gradient(135deg, #ff416c, #ff4b2b); box-shadow: 0 6px 0 #b92b2b; }
-.blue { background: linear-gradient(135deg, #2193b0, #6dd5ed); box-shadow: 0 6px 0 #1c6ea4; }
-.yellow { background: linear-gradient(135deg, #f7971e, #ffd200); box-shadow: 0 6px 0 #c78d00; color: #333; text-shadow: none; }
-.green { background: linear-gradient(135deg, #56ab2f, #a8e063); box-shadow: 0 6px 0 #3e7a21; }
-
-/* --- 4. HOST (TV) --- */
-.host-container { 
-    height: 100vh; 
+/* --- ADMIN CONTAINER --- */
+.admin-container { 
     display: flex; 
     flex-direction: column; 
-    align-items: center; 
-    justify-content: center; 
-    text-align: center; 
-    padding: 20px;
-    animation: slideIn 0.5s ease-out;
+    height: 100vh; 
+    background: #f4f4f9;
 }
 
-.question-text { 
-    font-size: 2.5rem; 
-    font-weight: 800; 
-    text-shadow: 0 4px 10px rgba(0,0,0,0.3); 
-    margin-bottom: 20px; 
-    line-height: 1.2; 
+/* Barra Superior Fixa */
+.admin-header {
+    background: #1a1a1a;
     color: white;
+    padding: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    z-index: 10;
 }
 
-/* Grid de Respostas (TV) */
-.answers-grid { 
-    display: grid; 
-    grid-template-columns: 1fr 1fr; 
-    gap: 20px; 
-    width: 95%; 
-    max-width: 1200px; 
-    margin-top: 10px; 
-}
-
-.ans-card { 
-    height: 120px; 
-    border-radius: 15px; 
-    font-size: 1.8rem; 
-    font-weight: 700; 
-    display: flex; 
-    align-items: center; 
-    justify-content: center; 
-    position: relative; 
-    overflow: hidden;
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-    transition: transform 0.3s, opacity 0.3s;
-    border: 4px solid transparent;
-}
-
-/* Barras e Contadores dentro do Card */
-.result-bar { position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.5); z-index: 1; transition: height 1s cubic-bezier(0.25, 1, 0.5, 1); }
-.ans-text { z-index: 2; position: relative; }
-.vote-count { z-index: 3; font-size: 1rem; font-weight: bold; }
-
-/* Timer Flutuante */
-#timerCircle {
-    position: fixed; top: 30px; right: 30px; width: 90px; height: 90px;
-    background: white; color: #333; border-radius: 50%;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 2.8rem; font-weight: 800;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.3); z-index: 100;
-    transition: background 0.3s;
-}
-.hurry { background: #e21b3c !important; color: white !important; animation: pulse 0.8s infinite; }
-
-/* Leaderboard (Lista de Ranking Intermediário) */
-.leaderboard-row {
-    background: white; color: #333; padding: 12px 25px; margin: 8px 0;
-    border-radius: 50px; display: flex; justify-content: space-between; align-items: center;
-    font-size: 1.4rem; font-weight: bold; width: 100%; max-width: 800px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.1); 
-    opacity: 0; animation: popIn 0.5s forwards;
-}
-
-/* --- 5. PLAYER (CELULAR) --- */
-.player-container { 
-    height: 100vh; 
-    display: flex; 
-    flex-direction: column; 
-    padding: 15px; 
-    background: #f0f2f5; 
-    color: #333; 
-}
-
-.player-grid { 
-    display: grid; 
-    grid-template-columns: 1fr 1fr; 
-    grid-template-rows: 1fr 1fr; 
-    gap: 15px; 
-    flex: 1; 
-}
-
-/* Botões 3D do Jogador */
-.p-btn { 
-    border: none; 
-    border-radius: 15px; 
-    cursor: pointer; 
-    width: 100%; 
-    height: 100%; 
-    transition: transform 0.1s, box-shadow 0.1s; 
-}
-.p-btn:active { 
-    transform: translateY(6px); 
-    box-shadow: none !important; 
-}
-.p-btn:disabled {
-    filter: grayscale(100%);
-    opacity: 0.5;
-    cursor: not-allowed;
-    transform: translateY(6px);
-    box-shadow: none;
-}
-
-/* --- 6. ADMIN UI (PAINEL DE CONTROLE) --- */
-.admin-body { 
-    background: #f4f7f6; 
-    color: #333; 
-    height: 100vh; 
-    display: flex; 
-    flex-direction: column; 
-    overflow: hidden; 
-}
-
-/* Header Fixo */
-.admin-header { 
-    padding: 15px; 
-    background: white; 
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05); 
-    z-index: 10; 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
-}
-
-/* Área de Conteúdo (Scrollável) */
-.admin-content { 
+/* Área de Rolagem (Lista de Perguntas) */
+.admin-scroll { 
     flex: 1; 
     overflow-y: auto; 
-    padding: 15px; 
-    padding-bottom: 140px; /* Aumentado para caber o footer maior */
+    padding: 15px;
+    background: #f4f4f9;
 }
 
-/* Footer Fixo (Botões de Controle) */
-.admin-footer { 
-    position: fixed; 
-    bottom: 0; left: 0; width: 100%; 
-    background: white; 
-    padding: 15px; 
-    box-shadow: 0 -5px 20px rgba(0,0,0,0.1); 
-    display: grid; 
-    grid-template-columns: 1fr 1fr; 
-    gap: 10px; 
-    z-index: 100;
-}
-
-/* Botões Modernos do Admin */
-.btn-modern {
-    border: none; 
-    padding: 15px; 
-    border-radius: 12px; 
-    font-weight: 600; 
-    font-size: 1rem; 
-    cursor: pointer;
-    transition: transform 0.1s, box-shadow 0.1s; 
-    display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%;
-    color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-}
-.btn-modern:active { transform: scale(0.96); box-shadow: none; }
-
-/* Variações de Botão Admin */
-.btn-primary { background: #6c5ce7; }
-.btn-warning { background: #fdcb6e; color: #333; }
-.btn-danger { background: #ff7675; }
-.btn-dark { background: #2d3436; }
-.btn-outline { background: transparent; border: 2px solid #ddd; color: #555; box-shadow: none; }
-
-/* Itens da Lista de Perguntas */
-.q-item {
-    background: white; margin-bottom: 10px; padding: 15px; border-radius: 12px;
-    display: flex; align-items: center; justify-content: space-between;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.03); cursor: pointer; transition: 0.2s; border-left: 5px solid transparent;
-}
-.q-item:hover { transform: translateX(5px); }
-.q-item.active { border-left-color: #6c5ce7; background: #eef2ff; }
-.q-number { font-weight: 800; color: #6c5ce7; margin-right: 10px; font-size: 1.1rem; }
-
-
-/* --- 7. NOVOS ESTILOS: DASHBOARD DE SELEÇÃO --- */
-
-/* Grid para os cartões de quiz */
-.quiz-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); /* Responsivo */
-    gap: 15px;
-    padding: 10px 0;
-}
-
-/* Cartão de Quiz Moderno */
-.quiz-card-modern {
+/* Botões da Lista de Perguntas */
+.q-btn {
+    width: 100%;
     background: white;
-    border-radius: 15px;
-    padding: 20px;
-    text-align: center;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    transition: all 0.2s ease;
+    border: 1px solid #ddd;
+    border-left: 5px solid #ccc; /* Indicador lateral */
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    text-align: left;
+    font-size: 1rem;
+    color: #333;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: 0.2s;
     cursor: pointer;
+}
+.q-btn:active { transform: scale(0.98); background: #eee; }
+.q-btn.active { 
+    border-left-color: #007bff; 
+    background: #e6f4ff; 
+    border-color: #b8daff;
+}
+
+/* Área de Controle Inferior (Fixa) */
+.admin-footer {
+    background: white;
+    padding: 15px;
+    border-top: 1px solid #ddd;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
+    z-index: 10;
+}
+
+/* Botões de Ação */
+.btn {
+    border: none;
+    border-radius: 10px;
+    padding: 15px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    width: 100%;
     display: flex;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 130px;
-    border: 2px solid transparent;
+    gap: 8px;
+    transition: 0.2s;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.1); /* Efeito 3D sutil */
+    color: white;
+    margin-bottom: 0; /* Reset */
 }
+.btn:active { transform: translateY(2px); box-shadow: none; }
 
-.quiz-card-modern:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 25px rgba(108, 92, 231, 0.15);
-    border-color: #6c5ce7;
-}
-.quiz-card-modern:active { transform: scale(0.98); }
+/* Cores Específicas */
+.btn-main { background: #333; } /* Botão Principal (Lobby/Next) */
+.btn-blue { background: #007bff; } /* Ranking */
+.btn-yellow { background: #ffc107; color: #333; } /* Pódio (texto escuro para contraste) */
+.btn-red { background: #dc3545; } /* Zerar */
 
-/* Ícone grande colorido */
-.quiz-icon-large {
-    font-size: 3rem;
-    margin-bottom: 15px;
-    /* Efeito de gradiente no texto do ícone */
-    background: -webkit-linear-gradient(45deg, #6c5ce7, #a29bfe);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-}
-
-.quiz-title-modern {
-    font-weight: 700;
-    font-size: 1rem;
-    color: #444;
+/* Grid do Rodapé */
+.control-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 10px;
 }
