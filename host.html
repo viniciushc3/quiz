@@ -2,59 +2,89 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>TV Principal</title>
+    <title>TV Principal - Super Quiz</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 <body>
-    <button id="btnSound" style="position:absolute; top:10px; left:10px; z-index:999; padding:10px; border-radius:5px; background:rgba(255,255,255,0.2); border:1px solid white; color:white; cursor:pointer;">🔇 Som Off</button>
+    <button id="btnSound" style="position:absolute; top:10px; left:10px; z-index:999; padding:10px 20px; border-radius:30px; background:rgba(255,255,255,0.2); border:1px solid white; color:white; cursor:pointer; font-weight:bold; backdrop-filter:blur(5px);">🔇 Som Off</button>
     
     <div id="lobby" class="host-container">
-        <h1 style="font-size:3.5rem;">Entrem no Jogo!</h1>
-        <img id="qrCode" src="" style="border: 8px solid white; border-radius: 15px; margin: 10px;">
-        <h2 id="joinUrl" style="background:rgba(255,255,255,0.1); padding:10px 20px; border-radius:50px;"></h2>
-        <div style="margin-top:20px; width: 100%;">
-            <h3>Jogadores: <span id="count" style="color:#45a3e5; font-size:2rem;">0</span></h3>
-            <div id="playerList" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width:900px; margin: 0 auto;"></div>
+        <h1 style="font-size:3.5rem; margin-bottom:10px; text-shadow:0 4px 10px rgba(0,0,0,0.5);">Entrem no Jogo!</h1>
+        
+        <img id="qrCode" src="" style="border: 8px solid white; border-radius: 15px; margin: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+        
+        <h2 id="joinUrl" style="background:rgba(255,255,255,0.1); padding:10px 30px; border-radius:50px; margin-bottom:30px;"></h2>
+        
+        <div style="width: 100%;">
+            <h3 style="margin-bottom:15px;">Jogadores Prontos: <span id="count" style="color:#45a3e5; font-size:2rem;">0</span></h3>
+            <div id="playerList" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width:1000px; margin: 0 auto;"></div>
         </div>
     </div>
 
     <div id="game" class="host-container hidden">
         <div id="timerCircle"></div>
         
-        <div class="media-box hidden" id="mediaContainer" style="display:flex; justify-content:center; width:100%;">
-            <img id="qImg" class="hidden" style="max-height:35vh;">
-            <video id="qVid" class="hidden" style="max-height:35vh;" loop playsinline></video>
+        <div class="media-box hidden" id="mediaContainer" style="display:flex; justify-content:center; width:100%; margin-bottom:15px;">
+            <img id="qImg" class="hidden" style="max-height:35vh; border-radius:10px;">
+            <video id="qVid" class="hidden" style="max-height:35vh; border-radius:10px;" loop playsinline></video>
             <audio id="qAud"></audio>
         </div>
 
-        <h1 id="questionText">Aguardando...</h1>
+        <h1 id="questionText" style="margin: 0 0 20px 0;">Carregando pergunta...</h1>
         
         <div class="answers-grid" id="ansGrid">
-            <div class="ans-card red" id="opt0"><span class="ans-text">A</span><div class="result-bar" id="bar0"></div><div class="vote-count" id="count0">0</div></div>
-            <div class="ans-card blue" id="opt1"><span class="ans-text">B</span><div class="result-bar" id="bar1"></div><div class="vote-count" id="count1">0</div></div>
-            <div class="ans-card yellow" id="opt2"><span class="ans-text">C</span><div class="result-bar" id="bar2"></div><div class="vote-count" id="count2">0</div></div>
-            <div class="ans-card green" id="opt3"><span class="ans-text">D</span><div class="result-bar" id="bar3"></div><div class="vote-count" id="count3">0</div></div>
+            <div class="ans-card red" id="opt0">
+                <span class="ans-text">A</span>
+                <div class="result-bar" id="bar0"></div>
+                <div class="vote-count" id="count0">0</div>
+            </div>
+            <div class="ans-card blue" id="opt1">
+                <span class="ans-text">B</span>
+                <div class="result-bar" id="bar1"></div>
+                <div class="vote-count" id="count1">0</div>
+            </div>
+            <div class="ans-card yellow" id="opt2">
+                <span class="ans-text">C</span>
+                <div class="result-bar" id="bar2"></div>
+                <div class="vote-count" id="count2">0</div>
+            </div>
+            <div class="ans-card green" id="opt3">
+                <span class="ans-text">D</span>
+                <div class="result-bar" id="bar3"></div>
+                <div class="vote-count" id="count3">0</div>
+            </div>
         </div>
     </div>
 
     <div id="leaderboard" class="host-container hidden" style="background:#2c3e50;">
-        <h1 style="font-size:3.5rem; margin-bottom:30px;">📈 Top 5</h1>
+        <h1 style="font-size:3.5rem; margin-bottom:30px;">📈 Top 5 Atual</h1>
         <div id="leaderboardList" style="width:80%; max-width:600px;"></div>
     </div>
 
     <div id="podium" class="host-container hidden" style="background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);">
-        <h1>🏆 Vencedores 🏆</h1>
+        <h1 style="font-size:4rem; margin-bottom:40px; text-shadow:0 5px 15px rgba(0,0,0,0.5);">🏆 Vencedores 🏆</h1>
         <div class="podium-stage">
-            <div class="podium-bar" id="p2Box" style="width:20%; height:50%; background:#c0c0c0; visibility:hidden;">
-                <div id="p2Name" style="font-weight:bold; margin-bottom:10px;"></div><div style="font-size:3rem;">2º</div><div id="p2Score" style="background:rgba(0,0,0,0.3); padding:5px; border-radius:10px;">0</div>
+            
+            <div class="podium-bar" id="p2Box" style="width:20%; height:50%; background:#c0c0c0; visibility:hidden; box-shadow:0 0 20px rgba(255,255,255,0.2);">
+                <div id="p2Name" style="font-weight:bold; margin-bottom:10px; font-size:1.2rem;"></div>
+                <div style="font-size:3rem;">2º</div>
+                <div id="p2Score" style="background:rgba(0,0,0,0.3); padding:5px 15px; border-radius:10px; margin-top:5px;">0</div>
             </div>
-            <div class="podium-bar" id="p1Box" style="width:25%; height:70%; background:#ffd700; visibility:hidden;">
-                <div style="font-size:4rem;">👑</div><div id="p1Name" style="font-weight:bold; font-size:1.8rem; margin-bottom:10px;"></div><div style="font-size:5rem; line-height:1;">1º</div><div id="p1Score" style="background:rgba(0,0,0,0.3); padding:5px; border-radius:10px;">0</div>
+            
+            <div class="podium-bar" id="p1Box" style="width:25%; height:70%; background:#ffd700; visibility:hidden; box-shadow:0 0 30px rgba(255,215,0,0.5); z-index:10;">
+                <div style="font-size:4rem; margin-bottom:0;">👑</div>
+                <div id="p1Name" style="font-weight:bold; font-size:1.8rem; margin-bottom:15px;"></div>
+                <div style="font-size:5rem; line-height:1;">1º</div>
+                <div id="p1Score" style="background:rgba(0,0,0,0.3); padding:5px 15px; border-radius:10px; margin-top:10px;">0</div>
             </div>
-            <div class="podium-bar" id="p3Box" style="width:20%; height:40%; background:#cd7f32; visibility:hidden;">
-                <div id="p3Name" style="font-weight:bold; margin-bottom:10px;"></div><div style="font-size:3rem;">3º</div><div id="p3Score" style="background:rgba(0,0,0,0.3); padding:5px; border-radius:10px;">0</div>
+            
+            <div class="podium-bar" id="p3Box" style="width:20%; height:40%; background:#cd7f32; visibility:hidden; box-shadow:0 0 20px rgba(255,255,255,0.2);">
+                <div id="p3Name" style="font-weight:bold; margin-bottom:10px; font-size:1.2rem;"></div>
+                <div style="font-size:3rem;">3º</div>
+                <div id="p3Score" style="background:rgba(0,0,0,0.3); padding:5px 15px; border-radius:10px; margin-top:5px;">0</div>
             </div>
+
         </div>
     </div>
 
@@ -65,6 +95,7 @@
         let timerInt = null;
         let audioOn = false;
 
+        // --- Configuração de Sons (Jukebox) ---
         const tracks = {
             lobby: new Audio('https://www.soundjay.com/misc/sounds/dream-harp-02.mp3'),
             think: new Audio('https://www.soundjay.com/clock/sounds/clock-ticking-2.mp3'),
@@ -78,61 +109,86 @@
             curr: null,
             play: function(key) {
                 if(!audioOn) return;
-                if(this.curr && this.curr !== tracks[key]) { this.curr.pause(); this.curr.currentTime=0; }
-                if(tracks[key]) { this.curr = tracks[key]; this.curr.play().catch(()=>{}); }
+                try {
+                    if(this.curr && this.curr !== tracks[key]) { this.curr.pause(); this.curr.currentTime=0; }
+                    if(tracks[key]) { this.curr = tracks[key]; this.curr.play().catch(e => console.log("Autoplay bloqueado pelo browser")); }
+                } catch(e) { console.log(e); }
             },
             stop: function() { if(this.curr) { this.curr.pause(); this.curr = null; } }
         };
 
+        // Controle do Botão de Som
         document.getElementById('btnSound').onclick = function() {
             audioOn = !audioOn;
             this.innerText = audioOn ? "🔊 Som ON" : "🔇 Som OFF";
+            this.style.background = audioOn ? "rgba(100,255,100,0.3)" : "rgba(255,255,255,0.1)";
+            
             if(audioOn && !document.getElementById('lobby').classList.contains('hidden')) Jukebox.play('lobby');
             else if(!audioOn) Jukebox.stop();
         };
 
         keepScreenAwake();
 
+        // Geração do QR Code
         const url = window.location.href.replace('host.html', 'player.html');
         document.getElementById('joinUrl').innerText = url;
         document.getElementById('qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}`;
 
-        // --- ESTADO DO JOGO ---
+        // --- OUVINTE PRINCIPAL DO ESTADO DO JOGO ---
         onValue(ref(db, 'gameState'), (snap) => {
             const st = snap.val();
             if(!st) return;
 
+            // 1. Resetar Exibição: Esconde tudo
             ['lobby', 'game', 'leaderboard', 'podium'].forEach(id => document.getElementById(id).classList.add('hidden'));
 
+            // --- ESTADO: LOBBY ---
             if(st.screen === 'lobby') {
                 document.getElementById('lobby').classList.remove('hidden');
                 Jukebox.play('lobby');
                 clearInterval(timerInt);
             }
+            // --- ESTADO: PERGUNTA (JOGO) ---
             else if(st.screen === 'question') {
                 document.getElementById('game').classList.remove('hidden');
                 
-                // CORREÇÃO: Lê os dados direto do Firebase
+                // LEITURA DOS DADOS DA PERGUNTA ENVIADOS PELO ADMIN
                 const q = st.questionData; 
-                if(!q) return;
+                
+                // Proteção contra erro se o Admin não mandou dados ainda
+                if (!q) {
+                    document.getElementById('questionText').innerText = "Aguardando Admin enviar pergunta...";
+                    return;
+                }
 
+                // Atualiza Texto
                 document.getElementById('questionText').innerText = q.text;
 
-                // Mídia
+                // --- Gerenciamento de Mídia ---
                 const box = document.getElementById('mediaContainer');
                 const img = document.getElementById('qImg');
                 const vid = document.getElementById('qVid');
                 const aud = document.getElementById('qAud');
                 
+                // Reseta tudo primeiro
                 img.classList.add('hidden'); vid.classList.add('hidden'); vid.pause(); aud.pause(); box.classList.add('hidden');
 
-                if(q.image) { box.classList.remove('hidden'); img.src = q.image; img.classList.remove('hidden'); }
-                else if(q.video) { box.classList.remove('hidden'); vid.src = q.video; vid.classList.remove('hidden'); if(audioOn) vid.play(); }
-                else if(q.audio) { box.classList.remove('hidden'); img.src = "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjEx.../music_icon.gif"; img.classList.remove('hidden'); aud.src = q.audio; if(audioOn) aud.play(); }
+                if(q.image) { 
+                    box.classList.remove('hidden'); img.src = q.image; img.classList.remove('hidden'); 
+                } else if(q.video) { 
+                    box.classList.remove('hidden'); vid.src = q.video; vid.classList.remove('hidden'); 
+                    if(audioOn) vid.play(); 
+                } else if(q.audio) { 
+                    box.classList.remove('hidden'); 
+                    img.src = "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjEx.../music_icon.gif"; // Placeholder para áudio
+                    img.classList.remove('hidden'); 
+                    aud.src = q.audio; 
+                    if(audioOn) aud.play(); 
+                }
 
-                // Opções
+                // --- Ajuste do Grid (2 ou 4 opções) ---
                 const grid = document.getElementById('ansGrid');
-                if(q.answers.length === 2) {
+                if(q.answers && q.answers.length === 2) {
                     grid.classList.add('two-options');
                     document.getElementById('opt2').classList.add('hidden');
                     document.getElementById('opt3').classList.add('hidden');
@@ -142,47 +198,80 @@
                     document.getElementById('opt3').classList.remove('hidden');
                 }
 
-                q.answers.forEach((ans, i) => {
-                    const el = document.getElementById(`opt${i}`);
-                    el.querySelector('.ans-text').innerText = ans;
-                    el.style.opacity = "1"; el.style.filter = "none"; el.style.border = "none";
-                    document.getElementById(`bar${i}`).style.height = "0";
-                    document.getElementById(`count${i}`).style.opacity = "0";
-                });
+                // --- Preenchimento das Respostas ---
+                if(q.answers) {
+                    q.answers.forEach((ans, i) => {
+                        const el = document.getElementById(`opt${i}`);
+                        if(el) {
+                            // Texto da resposta
+                            el.querySelector('.ans-text').innerText = ans;
+                            
+                            // Reseta visual (remove cinza, remove borda)
+                            el.style.opacity = "1"; el.style.filter = "none"; el.style.border = "none";
+                            
+                            // Reseta barras de votação
+                            const bar = document.getElementById(`bar${i}`);
+                            const count = document.getElementById(`count${i}`);
+                            if(bar) bar.style.height = "0";
+                            if(count) { count.innerText = "0"; count.style.opacity = "0"; }
+                        }
+                    });
+                }
 
+                // --- Lógica de Timer vs Resultado ---
                 if(st.endTime && !st.showResult) {
+                    // MODO PENSANDO
                     Jukebox.play('think');
                     startTimer(st.endTime);
                 } else if(st.showResult) {
+                    // MODO RESULTADO
                     clearInterval(timerInt);
                     document.getElementById('timerCircle').innerText = "0";
                     vid.pause(); aud.pause();
 
+                    // Conta Votos
                     const votes = [0,0,0,0];
                     let total = 0;
-                    playersList.forEach(p => { if(p.lastAnswer!=null) { votes[p.lastAnswer]++; total++; }});
+                    playersList.forEach(p => { 
+                        if(p.lastAnswer !== undefined && p.lastAnswer !== null) { 
+                            votes[p.lastAnswer]++; 
+                            total++; 
+                        }
+                    });
 
+                    // Som de Vitória ou Derrota
                     const correctVotes = votes[q.correct];
                     Jukebox.play(correctVotes > 0 ? 'win' : 'fail');
 
+                    // Atualiza Gráficos
                     q.answers.forEach((_, i) => {
                         const bar = document.getElementById(`bar${i}`);
                         const count = document.getElementById(`count${i}`);
                         const el = document.getElementById(`opt${i}`);
                         
-                        count.innerText = votes[i]; count.style.opacity = "1";
-                        bar.style.height = total > 0 ? (votes[i]/total)*100 + "%" : "0";
+                        // Mostra contagem numérica
+                        if(count) { count.innerText = votes[i]; count.style.opacity = "1"; }
+                        
+                        // Sobe a barra proporcionalmente
+                        if(bar) bar.style.height = total > 0 ? (votes[i]/total)*100 + "%" : "0";
 
-                        if(i !== q.correct) { el.style.opacity = "0.5"; el.style.filter = "grayscale(1)"; }
-                        else { el.style.border = "5px solid white"; }
+                        // Estiliza Certo/Errado
+                        if(i !== q.correct) { 
+                            el.style.opacity = "0.5"; el.style.filter = "grayscale(1)"; 
+                        } else { 
+                            el.style.border = "5px solid white"; 
+                        }
                     });
                 }
             }
+            // --- ESTADO: RANKING (Leaderboard) ---
             else if(st.screen === 'leaderboard') {
                 document.getElementById('leaderboard').classList.remove('hidden');
                 Jukebox.play('lobby');
                 const list = document.getElementById('leaderboardList');
                 list.innerHTML = '';
+                
+                // Pega top 5
                 playersList.slice(0,5).forEach((p, i) => {
                     const row = document.createElement('div');
                     row.className = 'leaderboard-row';
@@ -191,11 +280,13 @@
                     list.appendChild(row);
                 });
             }
+            // --- ESTADO: PÓDIO ---
             else if(st.screen === 'podium') {
                 document.getElementById('podium').classList.remove('hidden');
                 Jukebox.play('podium');
                 const top = playersList.slice(0,3);
                 
+                // Preenche caixas do pódio com segurança
                 const setPodium = (idx, id) => {
                     const p = top[idx];
                     const box = document.getElementById(id+'Box');
@@ -207,23 +298,23 @@
                         box.style.visibility = "hidden";
                     }
                 };
-                setPodium(0, 'p1');
-                setPodium(1, 'p2');
-                setPodium(2, 'p3');
+                setPodium(0, 'p1'); setPodium(1, 'p2'); setPodium(2, 'p3');
                 confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
             }
         });
 
-        // LISTA DE JOGADORES
+        // --- LISTENER DE JOGADORES ---
         onValue(ref(db, 'players'), (snap) => {
             const list = document.getElementById('playerList');
-            playersList = []; 
-            list.innerHTML = '';
+            playersList = []; list.innerHTML = '';
+            
             snap.forEach(c => playersList.push(c.val()));
+            // Ordena sempre por maior pontuação
             playersList.sort((a,b) => b.score - a.score);
             
             document.getElementById('count').innerText = playersList.length;
 
+            // Renderiza badges no Lobby
             playersList.forEach(p => {
                 const el = document.createElement('div');
                 el.style.cssText = "background:rgba(255,255,255,0.2); padding:8px 15px; border-radius:20px; font-weight:bold; display:flex; align-items:center; gap:5px;";
@@ -232,13 +323,21 @@
             });
         });
 
+        // --- Lógica do Temporizador Visual ---
         function startTimer(end) {
             if(timerInt) clearInterval(timerInt);
             const tm = document.getElementById('timerCircle');
+            
             timerInt = setInterval(() => {
                 const left = Math.ceil((end - Date.now())/1000);
-                if(left<=0) { tm.innerText="0"; clearInterval(timerInt); }
-                else { tm.innerText = left; if(left<=5) tm.classList.add('hurry'); else tm.classList.remove('hurry'); }
+                if(left <= 0) { 
+                     tm.innerText="0"; 
+                     clearInterval(timerInt); 
+                } else { 
+                    tm.innerText = left; 
+                    if(left<=5) tm.classList.add('hurry'); 
+                    else tm.classList.remove('hurry'); 
+                }
             }, 500);
         }
     </script>
