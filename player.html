@@ -3,21 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Controle</title>
+    <title>Jogador</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <audio id="clickSfx" src="https://www.soundjay.com/buttons/sounds/button-30.mp3"></audio>
 
     <div id="loginScreen" class="player-container" style="justify-content:center;">
-        <h1 style="font-size:3rem; margin-bottom:20px;">🎮 Quiz</h1>
-        <input type="text" id="nickname" placeholder="Seu Nome" style="padding:20px; font-size:1.5rem; text-align:center; border-radius:10px; border:2px solid #ddd; margin-bottom:15px;">
-        <button onclick="joinGame()" class="btn blue">ENTRAR</button>
-        <button onclick="clearSession()" class="btn" style="background:#ccc; color:#333; margin-top:20px;">Sair</button>
+        <h1 style="font-size:3rem; margin-bottom:10px;">🎮 Quiz</h1>
+        <p style="margin-bottom:20px; color:#666;">Digite seu nome para entrar:</p>
+        <input type="text" id="nickname" placeholder="Seu Nome/Apelido" style="padding:20px; font-size:1.5rem; text-align:center; border-radius:10px; border:2px solid #ddd; margin-bottom:15px; width:100%;">
+        <button onclick="joinGame()" class="btn blue">ENTRAR NO JOGO</button>
+        <div style="margin-top:20px; font-size:0.8rem; color:#888;">
+            Se o jogo travar, clique abaixo:<br>
+            <button onclick="forceReset()" style="background:none; border:none; color:red; text-decoration:underline; cursor:pointer;">Limpar Sessão</button>
+        </div>
     </div>
 
     <div id="gameScreen" class="player-container hidden">
-        <h2 id="statusText" style="margin:10px 0;">Escolha!</h2>
+        <h2 id="statusText" style="margin:10px 0;">Aguardando...</h2>
         <div class="player-grid" id="controls">
             <button class="p-btn red" onclick="sendAnswer(0)"></button>
             <button class="p-btn blue" onclick="sendAnswer(1)"></button>
@@ -26,7 +30,7 @@
         </div>
     </div>
 
-    <div id="resultScreen" class="hidden" style="height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:20px;">
+    <div id="resultScreen" class="hidden" style="height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:20px; text-align:center;">
         <h1 id="resIcon" style="font-size:6rem;"></h1>
         <h1 id="resTitle" style="font-size:3rem;"></h1>
         <h2 id="resScore"></h2>
@@ -35,20 +39,33 @@
     <script type="module">
         import { db, ref, set, push, onValue, update } from './game.js';
 
+        // Tenta recuperar ID antigo, mas não conecta automaticamente se estiver na tela de login
         let myId = localStorage.getItem('k_uid');
         const audio = document.getElementById('clickSfx');
         const playSfx = () => { audio.currentTime=0; audio.play().catch(()=>{}); };
         const avatars = ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🦄","🐙","👽","🤖","👻","🤡","🤠","💩","🌵","🍄","🍕","🍔","🚀","⚽"];
 
-        if(myId) connect();
+        // Se já tem ID e a página recarregou, tenta reconectar direto
+        // Mas se o usuário caiu na tela de login, o botão ENTRAR vai criar um novo ID
+        if(myId && document.getElementById('gameScreen').classList.contains('hidden')) {
+            // Verifica se o ID ainda é válido no banco antes de pular o login
+            // (Lógica simplificada: Assume que se tem ID, tenta conectar)
+             connect(); 
+        }
 
         window.joinGame = function() {
             const name = document.getElementById('nickname').value.trim();
-            if(!name) return alert("Nome?");
-            const bad = ["admin","host","palavrao"]; 
+            if(!name) return alert("Por favor, digite um nome!");
+            
+            // FILTRO DE NOMES
+            const bad = ["admin","host","palavrao","teste"]; 
             if(bad.some(b => name.toLowerCase().includes(b))) return alert("Nome inválido!");
 
             playSfx();
+
+            // *** CORREÇÃO DO MULTIPLAYER ***
+            // Sempre gera um NOVO ID ao clicar em Entrar, para garantir que abas diferentes
+            // sejam jogadores diferentes.
             const refP = push(ref(db, 'players'));
             myId = refP.key;
             localStorage.setItem('k_uid', myId);
@@ -56,32 +73,52 @@
             set(refP, {
                 name: name,
                 avatar: avatars[Math.floor(Math.random()*avatars.length)],
-                score: 0, streak: 0, status: 'thinking'
-            }).then(() => connect());
+                score: 0, 
+                streak: 0, 
+                status: 'thinking',
+                lastAnswer: null
+            }).then(() => {
+                connect();
+            });
         }
 
-        window.clearSession = function() { localStorage.removeItem('k_uid'); location.reload(); }
+        window.forceReset = function() {
+            localStorage.removeItem('k_uid');
+            location.reload();
+        }
 
         function connect() {
+            // Esconde login e mostra jogo
             document.getElementById('loginScreen').classList.add('hidden');
             document.getElementById('gameScreen').classList.remove('hidden');
             
+            // Monitora MEU status
             onValue(ref(db, `players/${myId}`), (snap) => {
                 const data = snap.val();
-                if(!data) { localStorage.removeItem('k_uid'); location.reload(); return; }
+                
+                // Se meu ID não existe mais no banco (Admin limpou), volta pro login
+                if(!data) { 
+                    localStorage.removeItem('k_uid'); 
+                    location.reload(); 
+                    return; 
+                }
 
                 const gameDiv = document.getElementById('gameScreen');
                 const resDiv = document.getElementById('resultScreen');
 
+                // Lógica de telas
                 if(data.status === 'thinking' && data.lastAnswer == null) {
+                    // Modo: Respondendo
                     gameDiv.classList.remove('hidden'); resDiv.classList.add('hidden');
                     document.body.style.background = "#f0f2f5";
-                    document.getElementById('statusText').innerText = "Sua vez!";
+                    document.getElementById('statusText').innerText = "Escolha sua resposta!";
                     document.getElementById('controls').style.opacity = "1";
                     document.querySelectorAll('.p-btn').forEach(b => b.disabled = false);
                 }
                 else if(data.status === 'correct' || data.status === 'wrong') {
+                    // Modo: Resultado
                     gameDiv.classList.add('hidden'); resDiv.classList.remove('hidden');
+                    
                     if(data.status === 'correct') {
                         document.body.style.background = "#26890c";
                         document.getElementById('resTitle').innerText = "ACERTOU!";
@@ -101,9 +138,13 @@
             playSfx();
             if(navigator.vibrate) navigator.vibrate(50);
             
-            update(ref(db, `players/${myId}`), { lastAnswer: idx, answerTime: Date.now() });
+            // Envia resposta + timestamp
+            update(ref(db, `players/${myId}`), { 
+                lastAnswer: idx, 
+                answerTime: Date.now() 
+            });
             
-            document.getElementById('statusText').innerText = "Enviado! 🤞";
+            document.getElementById('statusText').innerText = "Resposta Enviada! Aguarde...";
             document.getElementById('controls').style.opacity = "0.5";
             document.querySelectorAll('.p-btn').forEach(b => b.disabled = true);
         }

@@ -3,39 +3,79 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Pro</title>
+    <title>Admin - Controle</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* CSS Específico do Menu Admin para garantir que apareça */
+        .grid-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 10px; }
+        .quiz-card { 
+            background: white; padding: 20px; border-radius: 10px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); cursor: pointer;
+            text-align: left; transition: transform 0.1s;
+            border-left: 5px solid #333;
+        }
+        .quiz-card:active { transform: scale(0.98); background: #f9f9f9; }
+        .quiz-card h3 { margin: 0; font-size: 1rem; color: #333; }
+        .quiz-card p { margin: 5px 0 0 0; font-size: 0.8rem; color: #666; }
+        
+        /* Cores das Bordas */
+        .border-blue { border-left-color: #45a3e5; }
+        .border-red { border-left-color: #e21b3c; }
+        .border-green { border-left-color: #26890c; }
+        .border-yellow { border-left-color: #ffc00a; }
+    </style>
 </head>
 <body>
     <div class="admin-container">
         
         <div id="screenSelection">
-            <h2 style="margin-bottom:10px;">📂 Escolha o Quiz</h2>
-            <div class="quiz-card" onclick="loadQ('./quizzes/geral.json')">
-                <span>🌍 Conhecimentos Gerais</span><span>🧠</span>
+            <h2 style="padding: 0 10px; margin-bottom: 5px;">📂 Selecione o Quiz</h2>
+            <p style="padding: 0 10px; color: #666; font-size: 0.9rem;">Certifique-se que os arquivos JSON existem.</p>
+            
+            <div class="grid-menu">
+                <div class="quiz-card border-blue" onclick="loadQ('./quizzes/geral.json')">
+                    <h3>🌍 Geral</h3>
+                    <p>Perguntas Variadas</p>
+                </div>
+
+                <div class="quiz-card border-red" onclick="loadQ('./quizzes/series.json')">
+                    <h3>🎬 Séries</h3>
+                    <p>Filmes e TV</p>
+                </div>
+
+                <div class="quiz-card border-green" onclick="loadQ('./quizzes/geek.json')">
+                    <h3>👾 Geek</h3>
+                    <p>Games e Tech</p>
+                </div>
+
+                <div class="quiz-card border-yellow" onclick="loadQ('./quizzes/familia.json')">
+                    <h3>👨‍👩‍👧‍👦 Família</h3>
+                    <p>Nosso Quiz</p>
+                </div>
             </div>
-             </div>
+        </div>
 
         <div id="screenControl" class="hidden" style="display:flex; flex-direction:column; height:100%;">
-            <div style="background:#333; color:white; padding:10px; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
-                <span id="statusBar">Aguardando...</span>
-                <button onclick="location.reload()" style="font-size:0.8rem; padding:5px;">Sair</button>
+            <div style="background:#333; color:white; padding:15px; display:flex; justify-content:space-between; align-items:center; box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 10;">
+                <span id="statusBar" style="font-weight:bold;">Aguardando...</span>
+                <button onclick="changeQuiz()" style="font-size:0.8rem; padding:5px 10px; background:#555; border:1px solid #777; color:white; border-radius:4px; cursor:pointer;">Trocar</button>
             </div>
             
-            <div class="admin-scroll" id="qList"></div>
+            <div class="admin-scroll" id="qList" style="background: #f0f2f5;"></div>
 
-            <div style="padding-top:10px; border-top:1px solid #ccc; background:#f0f2f5;">
+            <div style="padding:15px; background:white; border-top:1px solid #ddd; box-shadow: 0 -4px 10px rgba(0,0,0,0.05);">
                 
-                <button id="btnNextAction" onclick="updateState('lobby')" class="btn" style="background:#555; margin-bottom:10px; border:2px solid #333;">
-                    🏠 Ir para o Lobby (Aguardar Jogadores)
+                <button id="btnNextAction" onclick="updateState('lobby')" class="btn" style="background:#555; margin-bottom:10px; border:2px solid #333; font-weight:bold;">
+                    🏠 Ir para o Lobby
                 </button>
 
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px;">
-                    <button onclick="updateState('leaderboard')" class="btn blue" style="margin:0;">📊 Ranking</button>
-                    <button onclick="updateState('podium')" class="btn yellow" style="margin:0;">🏆 Pódio</button>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <button onclick="updateState('leaderboard')" class="btn blue" style="margin:0; font-size:0.9rem;">📊 Ranking</button>
+                    <button onclick="updateState('podium')" class="btn yellow" style="margin:0; font-size:0.9rem;">🏆 Pódio</button>
                 </div>
-                <div style="margin-top:5px;">
-                    <button onclick="nuke()" class="btn red" style="margin:0; font-size:0.9rem;">🗑️ Zerar Tudo</button>
+                
+                <div style="margin-top:10px;">
+                    <button onclick="nuke()" class="btn red" style="margin:0; font-size:0.8rem; padding: 10px;">🗑️ Zerar Jogadores</button>
                 </div>
             </div>
         </div>
@@ -48,190 +88,158 @@
         let timer = null;
         let qStartTime = 0;
         let isQuestionRunning = false;
-        let playerListener = null; // Para vigiar respostas
+        let playerListener = null;
         
         const sfx = new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3');
-
         keepScreenAwake();
 
-        // --- CARREGAMENTO ---
+        // 1. FUNÇÃO DE CARREGAR (Com Alerta de Erro)
         window.loadQ = async function(path) {
             sfx.play();
-            quizData = await loadQuestions(path);
-            if(!quizData.length) return;
+            try {
+                // Tenta carregar
+                quizData = await loadQuestions(path);
+                
+                // Validação
+                if(!quizData || quizData.length === 0) {
+                    alert(`ERRO: O arquivo "${path}" está vazio ou não existe.\nVerifique a pasta 'quizzes'.`);
+                    return;
+                }
 
-            const list = document.getElementById('qList');
-            list.innerHTML = '';
-            
-            quizData.forEach((q, i) => {
-                const btn = document.createElement('button');
-                btn.id = `btnQ${i}`;
-                btn.className = 'btn';
-                btn.style.background = "white"; btn.style.color = "#333"; btn.style.textAlign = "left";
-                btn.innerHTML = `<b>#${i+1}</b> ${q.text.substring(0,30)}...`;
-                btn.onclick = () => { sfx.play(); runQ(i); };
-                list.appendChild(btn);
-            });
+                // Renderiza Botões
+                const list = document.getElementById('qList');
+                list.innerHTML = '';
+                
+                // Cabeçalho da lista
+                const header = document.createElement('div');
+                header.style.padding = "10px"; header.style.color="#666"; header.innerText = "Toque para lançar:";
+                list.appendChild(header);
 
-            document.getElementById('screenSelection').classList.add('hidden');
-            document.getElementById('screenControl').classList.remove('hidden');
-            
-            // Força ir para o Lobby ao carregar
-            updateState('lobby');
+                quizData.forEach((q, i) => {
+                    const btn = document.createElement('button');
+                    btn.id = `btnQ${i}`;
+                    btn.className = 'btn';
+                    btn.style.background = "white"; 
+                    btn.style.color = "#333"; 
+                    btn.style.textAlign = "left";
+                    btn.style.marginBottom = "5px";
+                    btn.style.boxShadow = "0 2px 2px rgba(0,0,0,0.1)";
+                    btn.innerHTML = `<b style="color:#45a3e5">#${i+1}</b> ${q.text.substring(0,25)}...`;
+                    btn.onclick = () => { sfx.play(); runQ(i); };
+                    list.appendChild(btn);
+                });
+
+                // Troca Tela
+                document.getElementById('screenSelection').classList.add('hidden');
+                document.getElementById('screenControl').classList.remove('hidden');
+                updateState('lobby');
+
+            } catch (e) {
+                alert("Erro grave ao carregar: " + e.message);
+            }
         }
 
-        // --- ESTADOS GERAIS ---
+        window.changeQuiz = function() {
+            if(confirm("Sair deste quiz?")) {
+                document.getElementById('screenControl').classList.add('hidden');
+                document.getElementById('screenSelection').classList.remove('hidden');
+                updateState('lobby');
+            }
+        }
+
         window.updateState = (screen) => { 
-            // Cancela monitoramento anterior se houver
             if(playerListener) { off(ref(db, 'players'), playerListener); playerListener = null; }
             if(timer) clearTimeout(timer);
             
             update(ref(db, 'gameState'), { screen: screen });
-            
-            // Atualiza UI do botão principal
+
             const btn = document.getElementById('btnNextAction');
             if(screen === 'lobby') {
-                btn.innerText = "⏳ Aguardando no Lobby...";
-                btn.onclick = () => alert("Escolha uma pergunta abaixo para começar!");
+                btn.innerText = "⏳ Aguardando Jogadores...";
                 btn.style.background = "#555";
+                btn.onclick = () => alert("Selecione uma pergunta da lista abaixo!");
             }
         }
 
-        window.nuke = () => { if(confirm("Isso vai apagar todos os jogadores. Confirmar?")) set(ref(db, 'players'), {}); }
+        window.nuke = () => { if(confirm("Certeza? Isso apaga todos os pontos.")) set(ref(db, 'players'), {}); }
 
-        // --- RODAR PERGUNTA ---
         window.runQ = async function(idx) {
-            // 1. Limpeza e Setup
-            if(timer) clearTimeout(timer);
-            if(playerListener) { off(ref(db, 'players'), playerListener); } // Para listener antigo
-            
-            isQuestionRunning = true;
-            qStartTime = Date.now();
-            const timeLimit = 20; // Segundos
+             if(timer) clearTimeout(timer);
+             if(playerListener) off(ref(db, 'players'), playerListener);
+             
+             isQuestionRunning = true; 
+             qStartTime = Date.now();
+             
+             // Feedback Visual
+             document.querySelectorAll('#qList button').forEach(b => b.style.background = "white");
+             const currentBtn = document.getElementById(`btnQ${idx}`);
+             if(currentBtn) currentBtn.style.background = "#e6f4ff";
 
-            // Feedback Visual no Admin
-            document.querySelectorAll('#qList button').forEach(b => b.style.background = "white");
-            document.getElementById(`btnQ${idx}`).style.background = "#e6f4ff";
-            document.getElementById('statusBar').innerText = `Pergunta ${idx+1} rolando...`;
+             document.getElementById('statusBar').innerText = `Pergunta ${idx+1} rolando...`;
 
-            // 2. Resetar Jogadores (CRUCIAL PARA CONTINUIDADE)
-            // Fazemos isso ANTES de mudar a tela da TV
-            const pSnap = await get(ref(db, 'players'));
-            const updates = {};
-            
-            let totalPlayers = 0;
-            if(pSnap.exists()) {
-                pSnap.forEach(c => { 
-                    totalPlayers++;
-                    updates[`players/${c.key}/lastAnswer`] = null; 
-                    updates[`players/${c.key}/status`] = 'thinking'; 
-                    updates[`players/${c.key}/answerTime`] = null; 
-                });
-            }
+             // Reset Players
+             const pSnap = await get(ref(db, 'players'));
+             const updates = {};
+             if(pSnap.exists()) pSnap.forEach(c => { 
+                 updates[`players/${c.key}/lastAnswer`] = null; 
+                 updates[`players/${c.key}/status`] = 'thinking'; 
+                 updates[`players/${c.key}/answerTime`] = null; 
+             });
+             
+             updates['gameState'] = { screen: 'question', currentQuestion: idx, showResult: false, endTime: qStartTime+20000 };
+             await update(ref(db), updates);
 
-            // Define estado da pergunta
-            updates['gameState'] = { 
-                screen: 'question', 
-                currentQuestion: idx, 
-                showResult: false, 
-                endTime: qStartTime+(timeLimit*1000) 
-            };
-            
-            await update(ref(db), updates);
+             // Monitoramento
+             playerListener = onValue(ref(db, 'players'), (snap) => {
+                 if(!isQuestionRunning) return;
+                 const ps = snap.val(); if(!ps) return;
+                 let ans=0, tot=0;
+                 Object.values(ps).forEach(p => { tot++; if(p.lastAnswer!=null) ans++; });
+                 document.getElementById('statusBar').innerText = `Respondido: ${ans} / ${tot}`;
+                 if(tot>0 && ans>=tot) finishQ(idx);
+             });
 
-            // 3. MONITORAMENTO DE RESPOSTAS (AUTO-STOP)
-            const playersRef = ref(db, 'players');
-            playerListener = onValue(playersRef, (snap) => {
-                if(!isQuestionRunning) return;
-
-                const players = snap.val();
-                if(!players) return;
-
-                let answeredCount = 0;
-                let currentTotal = 0;
-
-                Object.values(players).forEach(p => {
-                    currentTotal++;
-                    if(p.lastAnswer !== undefined && p.lastAnswer !== null) {
-                        answeredCount++;
-                    }
-                });
-
-                // Atualiza status no Admin
-                document.getElementById('statusBar').innerText = `Resp: ${answeredCount} / ${currentTotal}`;
-
-                // SE TODOS RESPONDERAM
-                if(currentTotal > 0 && answeredCount >= currentTotal) {
-                    console.log("Todos responderam! Encerrando...");
-                    finishQ(idx);
-                }
-            });
-
-            // Timer de segurança (caso alguém caia e não responda)
-            timer = setTimeout(() => {
-                if(isQuestionRunning) finishQ(idx);
-            }, timeLimit * 1000);
+             timer = setTimeout(() => { if(isQuestionRunning) finishQ(idx); }, 20000);
         }
 
-        // --- FINALIZAR PERGUNTA ---
         async function finishQ(idx) {
-            if(!isQuestionRunning) return;
+            if(!isQuestionRunning) return; 
             isQuestionRunning = false;
+            if(playerListener) off(ref(db, 'players'), playerListener); clearTimeout(timer);
             
-            // Para de vigiar as respostas
-            if(playerListener) { off(ref(db, 'players'), playerListener); playerListener = null; }
-            if(timer) clearTimeout(timer);
-
             const pSnap = await get(ref(db, 'players'));
             const correct = quizData[idx].correct;
             const updates = {};
-            
-            // Avisa a TV para mostrar resultado
             updates['gameState/showResult'] = true;
 
-            // Calcula Pontos
             if(pSnap.exists()) pSnap.forEach(c => {
                 const p = c.val();
                 if(p.lastAnswer === correct) {
-                    const streak = (p.streak||0) + 1;
-                    
-                    // Cálculo de Tempo
-                    let taken = (p.answerTime || (qStartTime+20000)) - qStartTime;
-                    if(taken < 0) taken = 0; if(taken > 20000) taken = 20000;
-                    
-                    // Fórmula: 1000 pts base + bônus de tempo
-                    const bonus = Math.floor(500 * (1 - (taken/20000))); 
-                    const totalPoints = 500 + bonus + (streak>2?200:0);
-
-                    updates[`players/${c.key}/score`] = (p.score||0) + totalPoints;
-                    updates[`players/${c.key}/streak`] = streak;
-                    updates[`players/${c.key}/status`] = 'correct';
+                    const streak = (p.streak||0)+1;
+                    let taken = (p.answerTime||(qStartTime+20000))-qStartTime;
+                    if(taken<0)taken=0; if(taken>20000)taken=20000;
+                    const pts = 500 + Math.floor(500*(1-(taken/20000))) + (streak>2?200:0);
+                    updates[`players/${c.key}/score`] = (p.score||0)+pts; updates[`players/${c.key}/streak`] = streak; updates[`players/${c.key}/status`] = 'correct';
                 } else {
-                    updates[`players/${c.key}/streak`] = 0;
-                    updates[`players/${c.key}/status`] = 'wrong';
+                    updates[`players/${c.key}/streak`] = 0; updates[`players/${c.key}/status`] = 'wrong';
                 }
             });
-
             await update(ref(db), updates);
-            document.getElementById('statusBar').innerText = "Resultado exibido!";
+            document.getElementById('statusBar').innerText = "Tempo Esgotado / Encerrado";
             
-            // Prepara botão para PRÓXIMA pergunta
-            const nextIdx = idx + 1;
-            const btnNext = document.getElementById('btnNextAction');
+            // Botão Próxima Pergunta
+            const nextIdx = idx+1;
+            const btn = document.getElementById('btnNextAction');
             if(nextIdx < quizData.length) {
-                btnNext.innerText = `➡️ Lançar Pergunta ${nextIdx + 1}`;
-                btnNext.onclick = () => { sfx.play(); runQ(nextIdx); };
-                btnNext.style.background = "#26890c"; // Verde para indicar continuidade
-                
-                // Scroll automático para a próxima pergunta na lista
-                const nextBtnEl = document.getElementById(`btnQ${nextIdx}`);
-                if(nextBtnEl) nextBtnEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
+                btn.innerText = `➡️ Lançar Pergunta ${nextIdx+1}`;
+                btn.onclick = () => { sfx.play(); runQ(nextIdx); };
+                btn.style.background = "#26890c";
+                const el = document.getElementById(`btnQ${nextIdx}`); 
+                if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
             } else {
-                btnNext.innerText = "🏆 Fim! Ir para o Pódio";
-                btnNext.onclick = () => updateState('podium');
-                btnNext.style.background = "#ffc00a";
-                btnNext.style.color = "black";
+                btn.innerText = "🏆 Ir para Pódio";
+                btn.onclick = () => updateState('podium');
+                btn.style.background = "#ffc00a"; btn.style.color="black";
             }
         }
     </script>
