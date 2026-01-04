@@ -3,34 +3,60 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Jogador</title>
+    <title>Controle</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Estilos exclusivos para a tela de espera */
+        .waiting-box {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100%;
+            text-align: center;
+            animation: pulse 1.5s infinite;
+        }
+        .waiting-icon { font-size: 4rem; margin-bottom: 20px; }
+        .waiting-text { font-size: 1.5rem; color: #555; font-weight: bold; }
+        
+        @keyframes pulse {
+            0% { opacity: 0.6; transform: scale(0.98); }
+            50% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0.6; transform: scale(0.98); }
+        }
+    </style>
 </head>
 <body>
     <audio id="clickSfx" src="https://www.soundjay.com/buttons/sounds/button-30.mp3"></audio>
 
     <div id="loginScreen" class="player-container" style="justify-content:center;">
-        <h1 style="font-size:3rem; margin-bottom:10px;">🎮 Quiz</h1>
-        <p style="margin-bottom:20px; color:#666;">Digite seu nome para entrar:</p>
-        <input type="text" id="nickname" placeholder="Seu Nome/Apelido" style="padding:20px; font-size:1.5rem; text-align:center; border-radius:10px; border:2px solid #ddd; margin-bottom:15px; width:100%;">
-        <button onclick="joinGame()" class="btn blue">ENTRAR NO JOGO</button>
-        <div style="margin-top:20px; font-size:0.8rem; color:#888;">
-            Se o jogo travar, clique abaixo:<br>
-            <button onclick="forceReset()" style="background:none; border:none; color:red; text-decoration:underline; cursor:pointer;">Limpar Sessão</button>
-        </div>
+        <h1 style="font-size:3rem; margin-bottom:20px;">🎮 Quiz</h1>
+        <input type="text" id="nickname" placeholder="Seu Nome / Apelido" maxlength="12"
+               style="padding:20px; font-size:1.5rem; text-align:center; border-radius:10px; border:2px solid #ddd; margin-bottom:15px; width:100%;">
+        <button onclick="joinGame()" class="btn blue">ENTRAR</button>
+        <button onclick="clearSession()" class="btn" style="background:#ccc; color:#333; margin-top:20px;">Sair</button>
     </div>
 
     <div id="gameScreen" class="player-container hidden">
-        <h2 id="statusText" style="margin:10px 0;">Aguardando...</h2>
-        <div class="player-grid" id="controls">
-            <button class="p-btn red" onclick="sendAnswer(0)"></button>
-            <button class="p-btn blue" onclick="sendAnswer(1)"></button>
-            <button class="p-btn yellow" onclick="sendAnswer(2)"></button>
-            <button class="p-btn green" onclick="sendAnswer(3)"></button>
+        
+        <div id="waitMessage" class="waiting-box hidden">
+            <div class="waiting-icon">⏳</div>
+            <div class="waiting-text">Aguardando o início da rodada...</div>
+            <small style="margin-top:10px; color:#888;">Olhe para a TV</small>
+        </div>
+
+        <div id="activeGameUI" class="hidden" style="height:100%; display:flex; flex-direction:column;">
+            <h2 id="statusText" style="margin:10px 0; text-align:center;">Sua vez! Escolha:</h2>
+            <div class="player-grid" id="controls">
+                <button class="p-btn red" onclick="sendAnswer(0)"></button>
+                <button class="p-btn blue" onclick="sendAnswer(1)"></button>
+                <button class="p-btn yellow" onclick="sendAnswer(2)"></button>
+                <button class="p-btn green" onclick="sendAnswer(3)"></button>
+            </div>
         </div>
     </div>
 
-    <div id="resultScreen" class="hidden" style="height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:20px; text-align:center;">
+    <div id="resultScreen" class="hidden" style="height:100vh; display:flex; flex-direction:column; justify-content:center; align-items:center; padding:20px;">
         <h1 id="resIcon" style="font-size:6rem;"></h1>
         <h1 id="resTitle" style="font-size:3rem;"></h1>
         <h2 id="resScore"></h2>
@@ -39,33 +65,24 @@
     <script type="module">
         import { db, ref, set, push, onValue, update } from './game.js';
 
-        // Tenta recuperar ID antigo, mas não conecta automaticamente se estiver na tela de login
         let myId = localStorage.getItem('k_uid');
+        let currentScreenState = 'lobby'; // lobby, question, leaderboard, podium
+        let myPlayerData = null;
+
         const audio = document.getElementById('clickSfx');
         const playSfx = () => { audio.currentTime=0; audio.play().catch(()=>{}); };
         const avatars = ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🦄","🐙","👽","🤖","👻","🤡","🤠","💩","🌵","🍄","🍕","🍔","🚀","⚽"];
 
-        // Se já tem ID e a página recarregou, tenta reconectar direto
-        // Mas se o usuário caiu na tela de login, o botão ENTRAR vai criar um novo ID
-        if(myId && document.getElementById('gameScreen').classList.contains('hidden')) {
-            // Verifica se o ID ainda é válido no banco antes de pular o login
-            // (Lógica simplificada: Assume que se tem ID, tenta conectar)
-             connect(); 
-        }
+        // Tenta reconectar se já tiver ID
+        if(myId) connect();
 
         window.joinGame = function() {
             const name = document.getElementById('nickname').value.trim();
-            if(!name) return alert("Por favor, digite um nome!");
-            
-            // FILTRO DE NOMES
-            const bad = ["admin","host","palavrao","teste"]; 
+            if(!name) return alert("Digite um nome!");
+            const bad = ["admin","host","palavrao"]; 
             if(bad.some(b => name.toLowerCase().includes(b))) return alert("Nome inválido!");
 
             playSfx();
-
-            // *** CORREÇÃO DO MULTIPLAYER ***
-            // Sempre gera um NOVO ID ao clicar em Entrar, para garantir que abas diferentes
-            // sejam jogadores diferentes.
             const refP = push(ref(db, 'players'));
             myId = refP.key;
             localStorage.setItem('k_uid', myId);
@@ -73,53 +90,88 @@
             set(refP, {
                 name: name,
                 avatar: avatars[Math.floor(Math.random()*avatars.length)],
-                score: 0, 
-                streak: 0, 
-                status: 'thinking',
-                lastAnswer: null
-            }).then(() => {
-                connect();
+                score: 0, streak: 0, status: 'thinking'
+            }).then(() => connect());
+        }
+
+        window.clearSession = function() { localStorage.removeItem('k_uid'); location.reload(); }
+
+        function connect() {
+            document.getElementById('loginScreen').classList.add('hidden');
+            
+            // 1. OUVINTE DO ESTADO DO JOGO (Para saber se é Lobby ou Pergunta)
+            onValue(ref(db, 'gameState'), (snap) => {
+                const st = snap.val();
+                if(!st) return;
+                currentScreenState = st.screen;
+                updateInterface(); // Atualiza a tela sempre que o jogo mudar
+            });
+
+            // 2. OUVINTE DO JOGADOR (Para saber meus pontos e se acertei)
+            onValue(ref(db, `players/${myId}`), (snap) => {
+                const data = snap.val();
+                if(!data) { localStorage.removeItem('k_uid'); location.reload(); return; }
+                myPlayerData = data;
+                updateInterface(); // Atualiza a tela sempre que meu status mudar
             });
         }
 
-        window.forceReset = function() {
-            localStorage.removeItem('k_uid');
-            location.reload();
-        }
+        // FUNÇÃO CENTRAL QUE DECIDE O QUE MOSTRAR NA TELA
+        function updateInterface() {
+            if(!myPlayerData) return;
 
-        function connect() {
-            // Esconde login e mostra jogo
-            document.getElementById('loginScreen').classList.add('hidden');
-            document.getElementById('gameScreen').classList.remove('hidden');
-            
-            // Monitora MEU status
-            onValue(ref(db, `players/${myId}`), (snap) => {
-                const data = snap.val();
+            const gameDiv = document.getElementById('gameScreen');
+            const resDiv = document.getElementById('resultScreen');
+            const waitBox = document.getElementById('waitMessage');
+            const activeUI = document.getElementById('activeGameUI');
+
+            // Reset básico
+            resDiv.classList.add('hidden');
+            gameDiv.classList.remove('hidden');
+
+            // --- LÓGICA DE ESTADOS ---
+
+            // CASO 1: Estamos no Lobby, Ranking ou Pódio -> MOSTRAR ESPERA
+            if (currentScreenState === 'lobby' || currentScreenState === 'leaderboard' || currentScreenState === 'podium') {
+                waitBox.classList.remove('hidden');
+                activeUI.classList.add('hidden');
+                document.body.style.background = "#f0f2f5";
                 
-                // Se meu ID não existe mais no banco (Admin limpou), volta pro login
-                if(!data) { 
-                    localStorage.removeItem('k_uid'); 
-                    location.reload(); 
-                    return; 
-                }
+                // Texto personalizado dependendo da tela
+                const txt = waitBox.querySelector('.waiting-text');
+                if(currentScreenState === 'lobby') txt.innerText = "Aguardando o início...";
+                else if(currentScreenState === 'podium') txt.innerText = "Olhe para o Pódio! 🏆";
+                else txt.innerText = "Veja o Ranking na TV 📊";
+                return;
+            }
 
-                const gameDiv = document.getElementById('gameScreen');
-                const resDiv = document.getElementById('resultScreen');
-
-                // Lógica de telas
-                if(data.status === 'thinking' && data.lastAnswer == null) {
-                    // Modo: Respondendo
-                    gameDiv.classList.remove('hidden'); resDiv.classList.add('hidden');
+            // CASO 2: Estamos em uma Pergunta
+            if (currentScreenState === 'question') {
+                
+                // Se eu ainda estou "pensando" e não respondi -> MOSTRAR BOTÕES
+                if (myPlayerData.status === 'thinking' && (myPlayerData.lastAnswer === undefined || myPlayerData.lastAnswer === null)) {
+                    waitBox.classList.add('hidden');
+                    activeUI.classList.remove('hidden');
                     document.body.style.background = "#f0f2f5";
-                    document.getElementById('statusText').innerText = "Escolha sua resposta!";
-                    document.getElementById('controls').style.opacity = "1";
-                    document.querySelectorAll('.p-btn').forEach(b => b.disabled = false);
-                }
-                else if(data.status === 'correct' || data.status === 'wrong') {
-                    // Modo: Resultado
-                    gameDiv.classList.add('hidden'); resDiv.classList.remove('hidden');
                     
-                    if(data.status === 'correct') {
+                    document.getElementById('statusText').innerText = "Sua vez! Escolha:";
+                    document.getElementById('controls').style.opacity = "1";
+                    document.getElementById('controls').style.pointerEvents = "auto";
+                }
+                
+                // Se eu já respondi -> MOSTRAR ESPERA (BLOQUEADO)
+                else if (myPlayerData.lastAnswer !== undefined && myPlayerData.lastAnswer !== null && myPlayerData.status === 'thinking') {
+                    waitBox.classList.remove('hidden');
+                    activeUI.classList.add('hidden');
+                    waitBox.querySelector('.waiting-text').innerText = "Resposta Enviada! 🤞";
+                }
+
+                // Se já saiu o resultado (Acertei ou Errei) -> MOSTRAR TELA DE RESULTADO
+                else if (myPlayerData.status === 'correct' || myPlayerData.status === 'wrong') {
+                    gameDiv.classList.add('hidden'); // Esconde controles
+                    resDiv.classList.remove('hidden'); // Mostra resultado
+
+                    if(myPlayerData.status === 'correct') {
                         document.body.style.background = "#26890c";
                         document.getElementById('resTitle').innerText = "ACERTOU!";
                         document.getElementById('resIcon').innerText = "🤩";
@@ -128,9 +180,9 @@
                         document.getElementById('resTitle').innerText = "ERROU...";
                         document.getElementById('resIcon').innerText = "😢";
                     }
-                    document.getElementById('resScore').innerText = `${data.score} pts`;
+                    document.getElementById('resScore').innerText = `${myPlayerData.score} pts`;
                 }
-            });
+            }
         }
 
         window.sendAnswer = function(idx) {
@@ -138,15 +190,12 @@
             playSfx();
             if(navigator.vibrate) navigator.vibrate(50);
             
-            // Envia resposta + timestamp
-            update(ref(db, `players/${myId}`), { 
-                lastAnswer: idx, 
-                answerTime: Date.now() 
-            });
-            
-            document.getElementById('statusText').innerText = "Resposta Enviada! Aguarde...";
+            // Efeito visual imediato
             document.getElementById('controls').style.opacity = "0.5";
-            document.querySelectorAll('.p-btn').forEach(b => b.disabled = true);
+            document.getElementById('controls').style.pointerEvents = "none";
+            document.getElementById('statusText').innerText = "Enviando...";
+
+            update(ref(db, `players/${myId}`), { lastAnswer: idx, answerTime: Date.now() });
         }
     </script>
 </body>
