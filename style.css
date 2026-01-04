@@ -5,7 +5,7 @@ body {
     margin: 0; 
     background: #1a1a1a; 
     color: white; 
-    overflow: hidden; /* Evita rolagem da página inteira */
+    overflow: hidden; 
 }
 
 .hidden { display: none !important; }
@@ -14,19 +14,16 @@ body {
 @keyframes slideIn { 0% { opacity: 0; transform: translateY(20px); } 100% { opacity: 1; transform: translateY(0); } }
 @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
 
-/* --- TV (HOST) - ESTILO ESCURO --- */
+/* =========================================
+   1. ESTILO DA TV (HOST)
+   ========================================= */
 .host-container { 
-    background-color: #1a1a1a; /* FORÇA O PRETO */
+    background-color: #1a1a1a;
     color: white;
-    width: 100vw;
-    height: 100vh; 
-    display: flex; 
-    flex-direction: column; 
-    justify-content: center; 
-    align-items: center; 
-    animation: slideIn 0.5s ease-out forwards;
-    position: absolute; /* Garante que cubra tudo */
-    top: 0; left: 0;
+    width: 100vw; height: 100vh; 
+    display: flex; flex-direction: column; 
+    justify-content: center; align-items: center; 
+    position: absolute; top: 0; left: 0;
 }
 
 #questionText { 
@@ -35,7 +32,6 @@ body {
     text-align: center; width: 90%;
 }
 
-/* Grid de Respostas da TV */
 .answers-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; width: 95%; height: 40vh; margin-top: 20px;}
 .answers-grid.two-options { grid-template-columns: 1fr 1fr; }
 
@@ -43,9 +39,10 @@ body {
     position: relative; display: flex; align-items: center; justify-content: center; 
     font-size: 2.2rem; border-radius: 15px; font-weight: bold; overflow: hidden;
     transition: all 0.3s; color: white; text-shadow: 0 2px 4px rgba(0,0,0,0.3);
-    background: #333; /* Cor base caso a cor específica falhe */
+    background: #333;
 }
 
+/* Cores Base */
 .red { background: #e21b3c; border-bottom: 8px solid #900018; }
 .blue { background: #1368ce; border-bottom: 8px solid #00386b; }
 .yellow { background: #d89e00; border-bottom: 8px solid #856100; color: white; }
@@ -66,26 +63,26 @@ body {
 }
 .hurry { background: #e21b3c !important; animation: pulse 0.8s infinite; }
 
-/* --- ADMIN (CELULAR) - CORREÇÃO DE RODAPÉ --- */
+/* Pódio e Ranking da TV */
+.leaderboard-row { background: white; color: #333; padding: 10px 20px; margin-bottom: 5px; border-radius: 50px; font-weight: bold; display: flex; justify-content: space-between; }
+.podium-stage { display: flex; align-items: flex-end; justify-content: center; height: 60vh; gap: 10px; }
+.podium-bar { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; color: white; border-radius: 10px 10px 0 0; padding-bottom: 10px; }
+
+
+/* =========================================
+   2. ESTILO DO ADMIN (CELULAR)
+   ========================================= */
 .admin-container { 
     display: flex; flex-direction: column; 
-    height: 100vh; /* Altura total */
-    height: 100dvh; /* Altura dinâmica para celulares modernos */
+    height: 100vh; height: 100dvh;
     background: #f4f4f9; color: #333; 
 }
-
 .admin-header {
-    flex: 0 0 auto; /* Não encolhe */
-    background: #2c3e50; color: white; padding: 15px;
+    flex: 0 0 auto; background: #2c3e50; color: white; padding: 15px;
     display: flex; justify-content: space-between; align-items: center;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1); z-index: 10;
 }
-
-.admin-scroll { 
-    flex: 1; /* Ocupa todo o espaço disponível */
-    overflow-y: auto; 
-    padding: 10px; padding-bottom: 20px;
-}
+.admin-scroll { flex: 1; overflow-y: auto; padding: 10px; padding-bottom: 20px; }
 
 .q-btn {
     width: 100%; background: white; color: #333;
@@ -96,17 +93,11 @@ body {
 }
 .q-btn.active { border-left-color: #007bff; background: #e6f4ff; border-color: #b8daff; }
 
-/* --- RODAPÉ CORRIGIDO --- */
 .admin-footer {
-    flex: 0 0 auto; /* Não encolhe */
-    background: white; 
-    padding: 15px; 
-    padding-bottom: 40px; /* ESPAÇO EXTRA PARA IPHONE/ANDROID */
-    border-top: 1px solid #ccc;
-    box-shadow: 0 -2px 10px rgba(0,0,0,0.05); 
-    z-index: 10;
+    flex: 0 0 auto; background: white; padding: 15px; padding-bottom: 40px;
+    border-top: 1px solid #ccc; box-shadow: 0 -2px 10px rgba(0,0,0,0.05); z-index: 10;
 }
-
+/* Botões do Admin */
 .btn {
     border: none; border-radius: 8px; padding: 12px; font-size: 1rem; font-weight: bold;
     cursor: pointer; width: 100%; display: flex; align-items: center; justify-content: center;
@@ -119,7 +110,49 @@ body {
 .btn-red { background: #dc3545; margin-bottom: 0; }
 .btn-green { background: #28a745; }
 
-/* Outros */
-.leaderboard-row { background: white; color: #333; padding: 10px 20px; margin-bottom: 5px; border-radius: 50px; font-weight: bold; display: flex; justify-content: space-between; }
-.podium-stage { display: flex; align-items: flex-end; justify-content: center; height: 60vh; gap: 10px; }
-.podium-bar { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; color: white; border-radius: 10px 10px 0 0; padding-bottom: 10px; }
+
+/* =========================================
+   3. ESTILO DO JOGADOR (CELULAR) - FALTAVA ISSO
+   ========================================= */
+.player-container {
+    height: 100vh; height: 100dvh;
+    display: flex; flex-direction: column;
+    padding: 20px;
+    background: #f4f4f9; /* Fundo claro para o jogador */
+    color: #333; /* Texto escuro */
+    text-align: center;
+}
+
+#statusText {
+    font-size: 1.5rem; margin-bottom: 20px; color: #333;
+}
+
+.player-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    gap: 15px;
+    flex: 1; /* Faz ocupar todo o espaço vertical disponível */
+    min-height: 0;
+}
+
+/* Botões de Resposta do Jogador (Grandes) */
+.p-btn {
+    border: none; border-radius: 15px; cursor: pointer;
+    width: 100%; height: 100%;
+    transition: transform 0.1s; display: block;
+}
+.p-btn:active { transform: scale(0.96); }
+
+/* Cores específicas dos botões do jogador */
+.p-btn.red { background: #e21b3c; box-shadow: 0 5px 0 #900018; }
+.p-btn.blue { background: #1368ce; box-shadow: 0 5px 0 #00386b; }
+.p-btn.yellow { background: #d89e00; box-shadow: 0 5px 0 #856100; }
+.p-btn.green { background: #26890c; box-shadow: 0 5px 0 #124204; }
+
+/* Tela de Login do Jogador */
+#loginScreen input {
+    width: 100%; padding: 15px; font-size: 1.2rem;
+    border: 2px solid #ddd; border-radius: 10px;
+    margin-bottom: 15px; text-align: center;
+}
