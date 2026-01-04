@@ -3,18 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Admin Final</title>
+    <title>Admin Controle</title>
     <link rel="stylesheet" href="style.css">
     <style>
         .admin-container { background: #f0f2f5; color: #333; height: 100vh; display: flex; flex-direction: column; }
         .grid-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; }
         
-        /* Estilo Forte para garantir visibilidade */
         .quiz-card { 
             background: white; padding: 15px; border-radius: 12px; 
             box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: pointer;
             border-left: 6px solid #333; display: flex; justify-content: space-between; align-items: center;
-            border: 1px solid #ddd; /* Borda extra para visibilidade */
+            border: 1px solid #ddd;
         }
         
         .q-info h3 { margin: 0; font-size: 1rem; color: #333; }
@@ -29,7 +28,7 @@
             text-align: left; padding: 15px; margin-bottom: 8px; border-radius: 8px;
             color: #333; cursor: pointer;
         }
-        .q-btn.active { background: #e6f4ff; border-color: #45a3e5; font-weight: bold; }
+        .q-btn.active { background: #e6f4ff; border-color: #45a3e5; font-weight: bold; border-left: 5px solid #45a3e5; }
         
         .bottom-controls { padding:15px; background:white; border-top:1px solid #ddd; }
         .hidden { display: none !important; }
@@ -40,12 +39,7 @@
         
         <div id="screenSelection">
             <h2 style="padding: 20px 20px 0 20px; margin: 0;">📂 Escolha o Quiz</h2>
-            
-            <div class="grid-menu" id="quizMenuContainer">
-                <div style="grid-column: span 2; padding: 20px; text-align: center; color: red; border: 2px dashed red;">
-                    ⚠️ O Javascript não carregou.<br>Verifique se o arquivo game.js existe.
-                </div>
-            </div>
+            <div class="grid-menu" id="quizMenuContainer"></div>
         </div>
 
         <div id="screenControl" class="hidden" style="display:flex; flex-direction:column; height:100%;">
@@ -68,7 +62,7 @@
     </div>
 
     <script type="module">
-        import { db, ref, update, get, set, onValue, off, keepScreenAwake, loadQuestions } from './game.js';
+        import { db, ref, update, get, set, onValue, off, keepScreenAwake, loadQuestions } from './game.js?v=4';
 
         let quizData = [];
         let timer = null;
@@ -79,14 +73,11 @@
         const sfx = new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3');
         keepScreenAwake();
 
-        // ---------------------------------------------
-        // 1. INICIALIZAR MENU (Executa Imediatamente)
-        // ---------------------------------------------
+        // 1. MENU
         function initMenu() {
             const container = document.getElementById('quizMenuContainer');
-            if(!container) return alert("Erro: Container do menu não achado no HTML");
+            if(!container) return;
 
-            // LISTA FIXA DE QUIZZES
             const quizzes = [
                 { file: "geral.json", title: "Geral", desc: "Perguntas Variadas", icon: "🌍", color: "#45a3e5" },
                 { file: "series.json", title: "Séries", desc: "Filmes e TV", icon: "🎬", color: "#e21b3c" },
@@ -94,49 +85,32 @@
                 { file: "familia.json", title: "Família", desc: "Nosso Quiz", icon: "🏠", color: "#ffc00a" }
             ];
 
-            // Limpa o texto "Carregando..."
             container.innerHTML = '';
-
             quizzes.forEach(q => {
                 const card = document.createElement('div');
                 card.className = 'quiz-card';
                 card.style.borderLeftColor = q.color;
-                
-                card.innerHTML = `
-                    <div class="q-info"><h3>${q.title}</h3><p>${q.desc}</p></div>
-                    <div class="q-icon">${q.icon}</div>
-                `;
-                
-                // IMPORTANTE: Adiciona o clique direto via JS
+                card.innerHTML = `<div class="q-info"><h3>${q.title}</h3><p>${q.desc}</p></div><div class="q-icon">${q.icon}</div>`;
                 card.onclick = function() { loadQ(`./quizzes/${q.file}`); };
-                
                 container.appendChild(card);
             });
         }
 
-        // ---------------------------------------------
-        // 2. FUNÇÕES GLOBAIS (Presas ao Window)
-        // ---------------------------------------------
-
+        // 2. FUNÇÕES GLOBAIS
         window.loadQ = async function(path) {
             sfx.play();
             try {
-                // Adiciona timestamp para evitar cache
                 const response = await fetch(path + '?t=' + Date.now());
                 if(!response.ok) throw new Error("Arquivo não encontrado.");
-                
                 const text = await response.text();
                 quizData = JSON.parse(text);
-
-                if(!Array.isArray(quizData)) throw new Error("JSON inválido.");
 
                 const list = document.getElementById('qList');
                 list.innerHTML = `<div style="padding:10px; color:#666;">${quizData.length} perguntas carregadas:</div>`;
 
                 quizData.forEach((q, i) => {
                     const btn = document.createElement('button');
-                    btn.id = `btnQ${i}`; 
-                    btn.className = 'q-btn'; 
+                    btn.id = `btnQ${i}`; btn.className = 'q-btn'; 
                     btn.innerHTML = `<b style="color:#45a3e5">#${i+1}</b> ${q.text.substring(0,35)}...`;
                     btn.onclick = () => { sfx.play(); runQ(i); };
                     list.appendChild(btn);
@@ -145,10 +119,7 @@
                 document.getElementById('screenSelection').classList.add('hidden');
                 document.getElementById('screenControl').classList.remove('hidden');
                 updateState('lobby');
-
-            } catch (e) {
-                alert("ERRO: " + e.message + "\nVerifique se o arquivo existe na pasta 'quizzes'.");
-            }
+            } catch (e) { alert("ERRO: " + e.message); }
         }
 
         window.changeQuiz = function() {
@@ -165,9 +136,7 @@
             update(ref(db, 'gameState'), { screen: screen });
         }
 
-        window.nuke = function() { 
-            if(confirm("Certeza?")) set(ref(db, 'players'), {}); 
-        }
+        window.nuke = function() { if(confirm("Certeza?")) set(ref(db, 'players'), {}); }
 
         window.runQ = async function(idx) {
              if(timer) clearTimeout(timer);
@@ -175,15 +144,15 @@
              
              isQuestionRunning = true; 
              qStartTime = Date.now();
-             
+             const q = quizData[idx]; // Dados da pergunta atual
+
              // Visual
              document.querySelectorAll('.q-btn').forEach(b => b.classList.remove('active'));
              const cb = document.getElementById(`btnQ${idx}`);
              if(cb) { cb.classList.add('active'); cb.scrollIntoView({behavior:'smooth', block:'center'}); }
-
              document.getElementById('statusBar').innerText = `Pergunta ${idx+1} rolando...`;
 
-             // Reset
+             // Reset Players
              const pSnap = await get(ref(db, 'players'));
              const updates = {};
              if(pSnap.exists()) pSnap.forEach(c => { 
@@ -191,10 +160,25 @@
                  updates[`players/${c.key}/status`] = 'thinking'; 
                  updates[`players/${c.key}/answerTime`] = null; 
              });
-             updates['gameState'] = { screen: 'question', currentQuestion: idx, showResult: false, endTime: qStartTime+20000 };
+
+             // *** AQUI ESTÁ A CORREÇÃO MÁGICA ***
+             // Enviamos os DADOS da pergunta, não só o índice
+             updates['gameState'] = { 
+                 screen: 'question', 
+                 showResult: false, 
+                 endTime: qStartTime + 20000,
+                 // Dados completos para a TV ler:
+                 qText: q.text,
+                 qAnswers: q.answers,
+                 qCorrect: q.correct, // TV usa isso para saber qual barra pintar de verde no final
+                 qImage: q.image || null,
+                 qVideo: q.video || null,
+                 qAudio: q.audio || null
+             };
+             
              await update(ref(db), updates);
 
-             // Monitor
+             // Monitoramento
              playerListener = onValue(ref(db, 'players'), (snap) => {
                  if(!isQuestionRunning) return;
                  const ps = snap.val(); 
@@ -236,9 +220,7 @@
             document.getElementById('statusBar').innerText = "Encerrado.";
         }
 
-        // Executa o menu agora!
         initMenu();
-
     </script>
 </body>
 </html>
