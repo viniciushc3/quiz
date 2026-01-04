@@ -2,7 +2,7 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>TV - Host</title>
+    <title>TV Principal</title>
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
@@ -13,14 +13,14 @@
         <h1 style="font-size:3.5rem;">Entrem no Jogo!</h1>
         <img id="qrCode" src="" style="border: 8px solid white; border-radius: 15px; margin: 10px;">
         <h2 id="joinUrl" style="background:rgba(255,255,255,0.1); padding:10px 20px; border-radius:50px;"></h2>
-        <div style="margin-top:20px; width:100%;">
-            <h3>Jogadores (<span id="count">0</span>):</h3>
-            <div id="playerList" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width:900px; margin:0 auto;"></div>
+        <div style="margin-top:20px; width: 100%;">
+            <h3>Jogadores: <span id="count" style="color:#45a3e5; font-size:2rem;">0</span></h3>
+            <div id="playerList" style="display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width:900px; margin: 0 auto;"></div>
         </div>
     </div>
 
     <div id="game" class="host-container hidden">
-        <div id="timerCircle">20</div>
+        <div id="timerCircle"></div>
         
         <div class="media-box hidden" id="mediaContainer" style="display:flex; justify-content:center; width:100%;">
             <img id="qImg" class="hidden" style="max-height:35vh;">
@@ -28,7 +28,7 @@
             <audio id="qAud"></audio>
         </div>
 
-        <h1 id="questionText">Aguardando pergunta...</h1>
+        <h1 id="questionText">Aguardando...</h1>
         
         <div class="answers-grid" id="ansGrid">
             <div class="ans-card red" id="opt0"><span class="ans-text">A</span><div class="result-bar" id="bar0"></div><div class="vote-count" id="count0">0</div></div>
@@ -39,7 +39,7 @@
     </div>
 
     <div id="leaderboard" class="host-container hidden" style="background:#2c3e50;">
-        <h1 style="font-size:3.5rem;">📈 Top 5</h1>
+        <h1 style="font-size:3.5rem; margin-bottom:30px;">📈 Top 5</h1>
         <div id="leaderboardList" style="width:80%; max-width:600px;"></div>
     </div>
 
@@ -47,53 +47,57 @@
         <h1>🏆 Vencedores 🏆</h1>
         <div class="podium-stage">
             <div class="podium-bar" id="p2Box" style="width:20%; height:50%; background:#c0c0c0; visibility:hidden;">
-                <div id="p2Name" style="font-weight:bold;"></div><div style="font-size:3rem;">2º</div><div id="p2Score">0</div>
+                <div id="p2Name" style="font-weight:bold; margin-bottom:10px;"></div><div style="font-size:3rem;">2º</div><div id="p2Score" style="background:rgba(0,0,0,0.3); padding:5px; border-radius:10px;">0</div>
             </div>
             <div class="podium-bar" id="p1Box" style="width:25%; height:70%; background:#ffd700; visibility:hidden;">
-                <div style="font-size:4rem;">👑</div><div id="p1Name" style="font-weight:bold; font-size:1.5rem;"></div><div style="font-size:5rem; line-height:1;">1º</div><div id="p1Score">0</div>
+                <div style="font-size:4rem;">👑</div><div id="p1Name" style="font-weight:bold; font-size:1.8rem; margin-bottom:10px;"></div><div style="font-size:5rem; line-height:1;">1º</div><div id="p1Score" style="background:rgba(0,0,0,0.3); padding:5px; border-radius:10px;">0</div>
             </div>
             <div class="podium-bar" id="p3Box" style="width:20%; height:40%; background:#cd7f32; visibility:hidden;">
-                <div id="p3Name" style="font-weight:bold;"></div><div style="font-size:3rem;">3º</div><div id="p3Score">0</div>
+                <div id="p3Name" style="font-weight:bold; margin-bottom:10px;"></div><div style="font-size:3rem;">3º</div><div id="p3Score" style="background:rgba(0,0,0,0.3); padding:5px; border-radius:10px;">0</div>
             </div>
         </div>
     </div>
 
     <script type="module">
-        import { db, ref, onValue, keepScreenAwake } from './game.js?v=4';
+        import { db, ref, onValue, keepScreenAwake } from './game.js';
 
         let playersList = [];
         let timerInt = null;
         let audioOn = false;
 
-        const tracks = { lobby: new Audio('https://www.soundjay.com/misc/sounds/dream-harp-02.mp3'), think: new Audio('https://www.soundjay.com/clock/sounds/clock-ticking-2.mp3'), win: new Audio('https://www.soundjay.com/human/sounds/applause-01.mp3'), fail: new Audio('https://www.soundjay.com/misc/sounds/fail-trombone-01.mp3'), podium: new Audio('https://www.soundjay.com/music/sounds/music-box-01.mp3') };
+        const tracks = {
+            lobby: new Audio('https://www.soundjay.com/misc/sounds/dream-harp-02.mp3'),
+            think: new Audio('https://www.soundjay.com/clock/sounds/clock-ticking-2.mp3'),
+            win: new Audio('https://www.soundjay.com/human/sounds/applause-01.mp3'),
+            fail: new Audio('https://www.soundjay.com/misc/sounds/fail-trombone-01.mp3'),
+            podium: new Audio('https://www.soundjay.com/music/sounds/music-box-01.mp3')
+        };
         tracks.lobby.loop = true; tracks.think.loop = true;
-        
-        const Jukebox = { curr: null, play: function(k){ if(!audioOn)return; if(this.curr&&this.curr!==tracks[k]){this.curr.pause();this.curr.currentTime=0;} if(tracks[k]){this.curr=tracks[k];this.curr.play().catch(()=>{});}}, stop: function(){if(this.curr){this.curr.pause();this.curr=null;}} };
-        document.getElementById('btnSound').onclick = function() { audioOn=!audioOn; this.innerText=audioOn?"🔊 Som ON":"🔇 Som OFF"; if(audioOn&&!document.getElementById('lobby').classList.contains('hidden')) Jukebox.play('lobby'); else if(!audioOn) Jukebox.stop(); };
+
+        const Jukebox = {
+            curr: null,
+            play: function(key) {
+                if(!audioOn) return;
+                if(this.curr && this.curr !== tracks[key]) { this.curr.pause(); this.curr.currentTime=0; }
+                if(tracks[key]) { this.curr = tracks[key]; this.curr.play().catch(()=>{}); }
+            },
+            stop: function() { if(this.curr) { this.curr.pause(); this.curr = null; } }
+        };
+
+        document.getElementById('btnSound').onclick = function() {
+            audioOn = !audioOn;
+            this.innerText = audioOn ? "🔊 Som ON" : "🔇 Som OFF";
+            if(audioOn && !document.getElementById('lobby').classList.contains('hidden')) Jukebox.play('lobby');
+            else if(!audioOn) Jukebox.stop();
+        };
 
         keepScreenAwake();
-        
+
         const url = window.location.href.replace('host.html', 'player.html');
         document.getElementById('joinUrl').innerText = url;
         document.getElementById('qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(url)}`;
 
-        // --- MONITORAR LISTA DE JOGADORES ---
-        onValue(ref(db, 'players'), (snap) => {
-            const list = document.getElementById('playerList');
-            playersList = []; list.innerHTML = '';
-            const raw = snap.val();
-            if(raw) Object.values(raw).forEach(p => playersList.push(p));
-            playersList.sort((a,b) => (b.score||0) - (a.score||0));
-            document.getElementById('count').innerText = playersList.length;
-            playersList.forEach(p => {
-                const el = document.createElement('div');
-                el.style.cssText = "background:rgba(255,255,255,0.2); color:white; padding:8px 15px; border-radius:20px; font-weight:bold; font-size:1.1rem; animation:popIn 0.3s;";
-                el.innerText = `${p.avatar||'👤'} ${p.name} (${p.score||0})`;
-                list.appendChild(el);
-            });
-        });
-
-        // --- MONITORAR ESTADO DO JOGO ---
+        // --- ESTADO DO JOGO ---
         onValue(ref(db, 'gameState'), (snap) => {
             const st = snap.val();
             if(!st) return;
@@ -102,103 +106,140 @@
 
             if(st.screen === 'lobby') {
                 document.getElementById('lobby').classList.remove('hidden');
-                Jukebox.play('lobby'); clearInterval(timerInt);
+                Jukebox.play('lobby');
+                clearInterval(timerInt);
             }
             else if(st.screen === 'question') {
                 document.getElementById('game').classList.remove('hidden');
-
-                // 1. ATUALIZA TEXTOS (Recebidos do Admin)
-                document.getElementById('questionText').innerText = st.qText || "Pergunta...";
                 
-                // Mídia
-                const box=document.getElementById('mediaContainer'), img=document.getElementById('qImg'), vid=document.getElementById('qVid'), aud=document.getElementById('qAud');
-                img.classList.add('hidden'); vid.classList.add('hidden'); aud.pause(); box.classList.add('hidden');
-                if(st.qImage){box.classList.remove('hidden');img.src=st.qImage;img.classList.remove('hidden');}
-                else if(st.qVideo){box.classList.remove('hidden');vid.src=st.qVideo;vid.classList.remove('hidden');if(audioOn)vid.play();}
+                // CORREÇÃO: Lê os dados direto do Firebase
+                const q = st.questionData; 
+                if(!q) return;
 
-                // 2. ATUALIZA OPÇÕES
-                const answers = st.qAnswers || ["A","B","C","D"];
-                answers.forEach((ans, i) => {
+                document.getElementById('questionText').innerText = q.text;
+
+                // Mídia
+                const box = document.getElementById('mediaContainer');
+                const img = document.getElementById('qImg');
+                const vid = document.getElementById('qVid');
+                const aud = document.getElementById('qAud');
+                
+                img.classList.add('hidden'); vid.classList.add('hidden'); vid.pause(); aud.pause(); box.classList.add('hidden');
+
+                if(q.image) { box.classList.remove('hidden'); img.src = q.image; img.classList.remove('hidden'); }
+                else if(q.video) { box.classList.remove('hidden'); vid.src = q.video; vid.classList.remove('hidden'); if(audioOn) vid.play(); }
+                else if(q.audio) { box.classList.remove('hidden'); img.src = "https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjEx.../music_icon.gif"; img.classList.remove('hidden'); aud.src = q.audio; if(audioOn) aud.play(); }
+
+                // Opções
+                const grid = document.getElementById('ansGrid');
+                if(q.answers.length === 2) {
+                    grid.classList.add('two-options');
+                    document.getElementById('opt2').classList.add('hidden');
+                    document.getElementById('opt3').classList.add('hidden');
+                } else {
+                    grid.classList.remove('two-options');
+                    document.getElementById('opt2').classList.remove('hidden');
+                    document.getElementById('opt3').classList.remove('hidden');
+                }
+
+                q.answers.forEach((ans, i) => {
                     const el = document.getElementById(`opt${i}`);
-                    if(el) {
-                        el.querySelector('.ans-text').innerText = ans;
-                        el.style.opacity = "1"; el.style.filter = "none"; el.style.border = "none";
-                        document.getElementById(`bar${i}`).style.height = "0";
-                        document.getElementById(`count${i}`).style.opacity = "0";
-                    }
+                    el.querySelector('.ans-text').innerText = ans;
+                    el.style.opacity = "1"; el.style.filter = "none"; el.style.border = "none";
+                    document.getElementById(`bar${i}`).style.height = "0";
+                    document.getElementById(`count${i}`).style.opacity = "0";
                 });
 
-                // 3. LÓGICA DO TIMER E RESULTADO
                 if(st.endTime && !st.showResult) {
-                    Jukebox.play('think'); 
-                    runTimer(st.endTime);
+                    Jukebox.play('think');
+                    startTimer(st.endTime);
                 } else if(st.showResult) {
-                    clearInterval(timerInt); 
-                    document.getElementById('timerCircle').innerText="0"; 
-                    vid.pause();
-                    
-                    // Contagem de votos
-                    const votes=[0,0,0,0]; let total=0;
-                    playersList.forEach(p=>{ if(p.lastAnswer!=null && p.lastAnswer!==undefined){ votes[p.lastAnswer]++; total++; } });
-                    
-                    const correctIndex = st.qCorrect;
-                    Jukebox.play((votes[correctIndex]>0 && total>0) ? 'win' : 'fail');
+                    clearInterval(timerInt);
+                    document.getElementById('timerCircle').innerText = "0";
+                    vid.pause(); aud.pause();
 
-                    answers.forEach((_, i) => {
-                        const bar=document.getElementById(`bar${i}`), count=document.getElementById(`count${i}`), el=document.getElementById(`opt${i}`);
-                        if(bar) {
-                            count.innerText=votes[i]; count.style.opacity="1";
-                            bar.style.height = total>0 ? (votes[i]/total)*100+"%" : "0";
-                            if(i !== correctIndex){ el.style.opacity="0.5"; el.style.filter="grayscale(1)"; } 
-                            else { el.style.border="5px solid white"; }
-                        }
+                    const votes = [0,0,0,0];
+                    let total = 0;
+                    playersList.forEach(p => { if(p.lastAnswer!=null) { votes[p.lastAnswer]++; total++; }});
+
+                    const correctVotes = votes[q.correct];
+                    Jukebox.play(correctVotes > 0 ? 'win' : 'fail');
+
+                    q.answers.forEach((_, i) => {
+                        const bar = document.getElementById(`bar${i}`);
+                        const count = document.getElementById(`count${i}`);
+                        const el = document.getElementById(`opt${i}`);
+                        
+                        count.innerText = votes[i]; count.style.opacity = "1";
+                        bar.style.height = total > 0 ? (votes[i]/total)*100 + "%" : "0";
+
+                        if(i !== q.correct) { el.style.opacity = "0.5"; el.style.filter = "grayscale(1)"; }
+                        else { el.style.border = "5px solid white"; }
                     });
                 }
             }
-            // ... (Resto igual: Leaderboard e Podium) ...
             else if(st.screen === 'leaderboard') {
                 document.getElementById('leaderboard').classList.remove('hidden');
                 Jukebox.play('lobby');
-                const list = document.getElementById('leaderboardList'); list.innerHTML='';
+                const list = document.getElementById('leaderboardList');
+                list.innerHTML = '';
                 playersList.slice(0,5).forEach((p, i) => {
-                    const r=document.createElement('div'); r.className='leaderboard-row'; r.style.animationDelay=(i*0.1)+'s';
-                    r.innerHTML=`<div>#${i+1} ${p.avatar} ${p.name}</div><div>${p.score}</div>`; list.appendChild(r);
+                    const row = document.createElement('div');
+                    row.className = 'leaderboard-row';
+                    row.style.animationDelay = (i*0.1)+'s';
+                    row.innerHTML = `<div>#${i+1} ${p.avatar} ${p.name}</div><div>${p.score}</div>`;
+                    list.appendChild(row);
                 });
             }
             else if(st.screen === 'podium') {
                 document.getElementById('podium').classList.remove('hidden');
                 Jukebox.play('podium');
-                const fill=(idx,id)=>{
-                    const p=playersList[idx]; const b=document.getElementById(id+'Box');
-                    if(p){ b.style.visibility='visible'; document.getElementById(id+'Name').innerText=`${p.avatar} ${p.name}`; document.getElementById(id+'Score').innerText=p.score; }
-                    else{ b.style.visibility='hidden'; }
+                const top = playersList.slice(0,3);
+                
+                const setPodium = (idx, id) => {
+                    const p = top[idx];
+                    const box = document.getElementById(id+'Box');
+                    if(p) {
+                        box.style.visibility = "visible";
+                        document.getElementById(id+'Name').innerText = `${p.avatar} ${p.name}`;
+                        document.getElementById(id+'Score').innerText = p.score;
+                    } else {
+                        box.style.visibility = "hidden";
+                    }
                 };
-                fill(0,'p1'); fill(1,'p2'); fill(2,'p3');
-                confetti({particleCount:150,spread:70,origin:{y:0.6}});
+                setPodium(0, 'p1');
+                setPodium(1, 'p2');
+                setPodium(2, 'p3');
+                confetti({ particleCount: 150, spread: 70, origin: { y: 0.6 } });
             }
         });
 
-        // FUNÇÃO TIMER ROBUSTA
-        function runTimer(endTime) {
+        // LISTA DE JOGADORES
+        onValue(ref(db, 'players'), (snap) => {
+            const list = document.getElementById('playerList');
+            playersList = []; 
+            list.innerHTML = '';
+            snap.forEach(c => playersList.push(c.val()));
+            playersList.sort((a,b) => b.score - a.score);
+            
+            document.getElementById('count').innerText = playersList.length;
+
+            playersList.forEach(p => {
+                const el = document.createElement('div');
+                el.style.cssText = "background:rgba(255,255,255,0.2); padding:8px 15px; border-radius:20px; font-weight:bold; display:flex; align-items:center; gap:5px;";
+                el.innerText = `${p.avatar||'👤'} ${p.name}`;
+                list.appendChild(el);
+            });
+        });
+
+        function startTimer(end) {
             if(timerInt) clearInterval(timerInt);
-            const el = document.getElementById('timerCircle');
-            
-            const tick = () => {
-                const now = Date.now();
-                const diff = Math.ceil((endTime - now) / 1000);
-                
-                if (diff <= 0) {
-                    el.innerText = "0";
-                    clearInterval(timerInt);
-                } else {
-                    el.innerText = diff;
-                    if(diff <= 5) el.classList.add('hurry');
-                    else el.classList.remove('hurry');
-                }
-            };
-            
-            tick(); // Executa na hora
-            timerInt = setInterval(tick, 500); // Repete a cada 0.5s
+            const tm = document.getElementById('timerCircle');
+            timerInt = setInterval(() => {
+                const left = Math.ceil((end - Date.now())/1000);
+                if(left<=0) { tm.innerText="0"; clearInterval(timerInt); }
+                else { tm.innerText = left; if(left<=5) tm.classList.add('hurry'); else tm.classList.remove('hurry'); }
+            }, 500);
         }
     </script>
 </body>
