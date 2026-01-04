@@ -6,8 +6,10 @@
     <title>Admin Ultimate</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* Estilos exclusivos do Admin */
+        /* CSS Específico do Admin */
         .admin-container { background: #f0f2f5; color: #333; height: 100vh; display: flex; flex-direction: column; }
+        
+        /* Menu de Seleção */
         .grid-menu { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 20px; }
         .quiz-card { 
             background: white; padding: 15px; border-radius: 12px; 
@@ -20,22 +22,25 @@
         .q-info p { margin: 4px 0 0 0; font-size: 0.75rem; color: #777; }
         .q-icon { font-size: 1.8rem; }
         
-        /* Status Bar */
+        /* Barra de Status */
         .status-bar {
             background:#333; color:white; padding:12px 15px; 
             display:flex; justify-content:space-between; align-items:center; 
             box-shadow: 0 4px 10px rgba(0,0,0,0.2); z-index: 10;
         }
         
-        /* Lista de Perguntas */
+        /* Área de Scroll das Perguntas */
         .admin-scroll { flex: 1; overflow-y: auto; padding: 10px; background: #eef1f5; }
+        
+        /* Botões de Pergunta (Estilo Forçado) */
         .q-btn {
-            width: 100%; background: white; border: none; text-align: left;
-            padding: 12px; margin-bottom: 8px; border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05); font-size: 0.95rem; color: #444;
-            transition: 0.2s; border-left: 4px solid transparent;
+            display: block; width: 100%; 
+            background: white; border: 1px solid #ddd; border-left: 5px solid transparent;
+            text-align: left; padding: 15px; margin-bottom: 8px; border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05); font-size: 1rem; color: #444;
+            cursor: pointer; transition: 0.2s;
         }
-        .q-btn.active { background: #e6f4ff; border-left-color: #45a3e5; color: #000; }
+        .q-btn.active { background: #e6f4ff; border-left-color: #45a3e5; color: #000; font-weight: bold; }
         
         /* Controles Inferiores */
         .bottom-controls { padding:15px; background:white; border-top:1px solid #ddd; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); }
@@ -46,7 +51,7 @@
         
         <div id="screenSelection">
             <h2 style="padding: 20px 20px 0 20px; margin: 0;">📂 Escolha o Quiz</h2>
-            <p style="padding: 0 20px; color: #666; font-size: 0.9rem;">Toque para iniciar:</p>
+            <p style="padding: 0 20px; color: #666; font-size: 0.9rem;">Toque para carregar as perguntas:</p>
             
             <div class="grid-menu" id="quizMenuContainer">
                 </div>
@@ -90,37 +95,37 @@
         const sfx = new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3');
         keepScreenAwake();
 
-        // --- 1. CONFIGURAÇÃO DOS QUIZZES (Edite aqui se criar novos arquivos) ---
+        // --- 1. CONFIGURAÇÃO DOS QUIZZES (Menu Fixo) ---
         window.onload = function() {
             const container = document.getElementById('quizMenuContainer');
             
-            // LISTA MANUAL PARA NÃO TRAVAR O CARREGAMENTO
+            // LISTA MANUAL (Edite aqui se criar novos arquivos na pasta quizzes/)
             const quizzes = [
                 {
                     "file": "geral.json",
-                    "title": "Geral",
-                    "desc": "Variados",
+                    "title": "Conhecimentos Gerais",
+                    "desc": "Perguntas Variadas",
                     "icon": "🌍",
                     "color": "#45a3e5"
                 },
                 {
                     "file": "series.json",
-                    "title": "Séries",
-                    "desc": "Filmes e TV",
+                    "title": "Séries e Filmes",
+                    "desc": "Cinema e TV",
                     "icon": "🎬",
                     "color": "#e21b3c"
                 },
                 {
                     "file": "geek.json",
-                    "title": "Geek",
-                    "desc": "Games/Anime",
+                    "title": "Mundo Geek",
+                    "desc": "Games e Animes",
                     "icon": "👾",
                     "color": "#26890c"
                 },
                 {
                     "file": "familia.json",
                     "title": "Família",
-                    "desc": "Pessoal",
+                    "desc": "Nosso Quiz",
                     "icon": "🏠",
                     "color": "#ffc00a"
                 }
@@ -138,25 +143,37 @@
             });
         }
 
-        // --- 2. CARREGAR PERGUNTAS ---
+        // --- 2. CARREGAR PERGUNTAS (Com Diagnóstico de Erro) ---
         window.loadQ = async function(path) {
             sfx.play();
             try {
-                // Adiciona timestamp (?t=...) para evitar cache velho
-                quizData = await loadQuestions(path + '?t=' + Date.now());
+                // Adiciona timestamp para evitar cache velho
+                const response = await fetch(path + '?t=' + Date.now());
                 
-                if(!quizData || quizData.length === 0) {
-                    alert(`ERRO: O arquivo "${path}" não foi encontrado ou está vazio.`);
-                    return;
+                if(!response.ok) {
+                    throw new Error("Arquivo não encontrado na pasta 'quizzes'.");
                 }
 
+                const text = await response.text();
+                
+                try {
+                    quizData = JSON.parse(text);
+                } catch(e) {
+                    throw new Error("O arquivo JSON está com erro de pontuação (vírgula/aspas).");
+                }
+                
+                if(!Array.isArray(quizData)) {
+                    throw new Error("O arquivo não é uma lista [] válida.");
+                }
+
+                // Renderiza Botões
                 const list = document.getElementById('qList');
-                list.innerHTML = `<div style="padding:10px; color:#666; font-size:0.8rem;">Toque em uma pergunta para iniciar:</div>`;
+                list.innerHTML = `<div style="padding:10px; color:#666; font-size:0.8rem;">${quizData.length} perguntas carregadas:</div>`;
 
                 quizData.forEach((q, i) => {
                     const btn = document.createElement('button');
                     btn.id = `btnQ${i}`; 
-                    btn.className = 'q-btn';
+                    btn.className = 'q-btn'; // Classe CSS definida no topo
                     btn.innerHTML = `<b style="color:#45a3e5">#${i+1}</b> ${q.text.substring(0,35)}...`;
                     btn.onclick = () => { sfx.play(); runQ(i); };
                     list.appendChild(btn);
@@ -167,7 +184,7 @@
                 updateState('lobby');
 
             } catch (e) {
-                alert("Erro ao ler JSON: " + e.message);
+                alert("ERRO AO CARREGAR: " + e.message);
             }
         }
 
@@ -188,15 +205,15 @@
             
             const btn = document.getElementById('btnNextAction');
             if(screen === 'lobby') {
-                btn.innerText = "⏳ Aguardando Jogadores..."; 
+                btn.innerText = "⏳ Aguardando no Lobby..."; 
                 btn.style.background = "#444";
-                btn.onclick = () => alert("Selecione uma pergunta da lista!");
+                btn.onclick = () => alert("Selecione uma pergunta da lista acima!");
             }
         }
 
         window.nuke = () => { if(confirm("Certeza? Isso apaga todos os pontos.")) set(ref(db, 'players'), {}); }
 
-        // --- 4. RODAR PERGUNTA (LÓGICA PRINCIPAL) ---
+        // --- 4. RODAR PERGUNTA ---
         window.runQ = async function(idx) {
              if(timer) clearTimeout(timer);
              if(playerListener) off(ref(db, 'players'), playerListener);
@@ -204,7 +221,7 @@
              isQuestionRunning = true; 
              qStartTime = Date.now();
              
-             // Visual
+             // Visual do Botão Ativo
              document.querySelectorAll('.q-btn').forEach(b => b.classList.remove('active'));
              const currentBtn = document.getElementById(`btnQ${idx}`);
              if(currentBtn) {
@@ -230,10 +247,11 @@
              playerListener = onValue(ref(db, 'players'), (snap) => {
                  if(!isQuestionRunning) return;
                  const ps = snap.val(); 
-                 if(!ps) return;
                  
                  let ans=0, tot=0;
-                 Object.values(ps).forEach(p => { tot++; if(p.lastAnswer!=null) ans++; });
+                 if(ps) {
+                    Object.values(ps).forEach(p => { tot++; if(p.lastAnswer!=null) ans++; });
+                 }
                  
                  document.getElementById('statusBar').innerText = `Respondido: ${ans} / ${tot}`;
                  
@@ -261,7 +279,7 @@
                 const p = c.val();
                 if(p.lastAnswer === correct) {
                     const streak = (p.streak||0)+1;
-                    // Pontuação Baseada em Tempo (20s max)
+                    // Pontuação
                     let taken = (p.answerTime||(qStartTime+20000)) - qStartTime;
                     if(taken<0) taken=0; if(taken>20000) taken=20000;
                     
