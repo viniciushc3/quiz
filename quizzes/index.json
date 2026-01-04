@@ -1,0 +1,30 @@
+[
+    {
+        "file": "geral.json",
+        "title": "Conhecimentos Gerais",
+        "desc": "Perguntas Variadas",
+        "icon": "🌍",
+        "color": "#45a3e5"
+    },
+    {
+        "file": "series.json",
+        "title": "Filmes e Séries",
+        "desc": "Cinema e Netflix",
+        "icon": "🎬",
+        "color": "#e21b3c"
+    },
+    {
+        "file": "geek.json",
+        "title": "Mundo Geek",
+        "desc": "Games e Animes",
+        "icon": "👾",
+        "color": "#26890c"
+    },
+    {
+        "file": "familia.json",
+        "title": "Quiz Família",
+        "desc": "Só para os íntimos",
+        "icon": "👨‍👩‍👧‍👦",
+        "color": "#ffc00a"
+    }
+]
