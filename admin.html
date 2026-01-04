@@ -5,210 +5,205 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Pro</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="admin-body">
+<body>
+    <div class="admin-container">
+        
+        <div id="screenSelection">
+            <h2 style="margin-bottom:10px;">📂 Escolha o Quiz</h2>
+            <div class="quiz-card" onclick="loadQ('./quizzes/geral.json')">
+                <span>🌍 Conhecimentos Gerais</span><span>🧠</span>
+            </div>
+             </div>
 
-    <div id="screenSelection" style="padding: 25px; height: 100vh; overflow-y: auto;">
-        <h2 style="margin-bottom: 10px; color: #333; font-weight: 800;">👋 Olá, Admin!</h2>
-        <div class="quiz-grid">
-            <div onclick="loadQ('./quizzes/geral.json')" class="quiz-card-modern">
-                <i class="fas fa-brain quiz-icon-large"></i><span class="quiz-title-modern">Gerais</span>
+        <div id="screenControl" class="hidden" style="display:flex; flex-direction:column; height:100%;">
+            <div style="background:#333; color:white; padding:10px; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                <span id="statusBar">Aguardando...</span>
+                <button onclick="location.reload()" style="font-size:0.8rem; padding:5px;">Sair</button>
             </div>
-            <div onclick="loadQ('./quizzes/series.json')" class="quiz-card-modern">
-                <i class="fas fa-film quiz-icon-large"></i><span class="quiz-title-modern">Séries</span>
-            </div>
-            <div onclick="loadQ('./quizzes/strange.json')" class="quiz-card-modern">
-                <i class="fas fa-ghost quiz-icon-large"></i><span class="quiz-title-modern">Stranger</span>
-            </div>
-            <div onclick="loadQ('./quizzes/familia.json')" class="quiz-card-modern">
-                <i class="fas fa-home quiz-icon-large"></i><span class="quiz-title-modern">Família</span>
-            </div>
-        </div>
-    </div>
+            
+            <div class="admin-scroll" id="qList"></div>
 
-    <div id="screenControl" class="hidden" style="display:flex; flex-direction:column; height:100%;">
-        <div class="admin-header">
-            <h3 style="margin:0;"><i class="fas fa-gamepad"></i> Painel</h3>
-            <button onclick="location.reload()" class="btn-modern btn-outline" style="width: auto; padding: 5px 15px; font-size:0.8rem;">
-                <i class="fas fa-chevron-left"></i> Sair
-            </button>
-        </div>
+            <div style="padding-top:10px; border-top:1px solid #ccc; background:#f0f2f5;">
+                
+                <button id="btnNextAction" onclick="updateState('lobby')" class="btn" style="background:#555; margin-bottom:10px; border:2px solid #333;">
+                    🏠 Ir para o Lobby (Aguardar Jogadores)
+                </button>
 
-        <div style="padding: 15px 15px 0 15px;">
-            <button onclick="runRandomQ()" class="btn-modern" style="background: linear-gradient(45deg, #00b894, #00cec9); font-size: 1.2rem; box-shadow: 0 4px 15px rgba(0, 184, 148, 0.4);">
-                <i class="fas fa-dice"></i> PRÓXIMA ALEATÓRIA
-            </button>
-            <div style="text-align:center; font-size:0.8rem; color:#666; margin-top:5px;">
-                Restantes: <span id="lblRemaining">0</span>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px;">
+                    <button onclick="updateState('leaderboard')" class="btn blue" style="margin:0;">📊 Ranking</button>
+                    <button onclick="updateState('podium')" class="btn yellow" style="margin:0;">🏆 Pódio</button>
+                </div>
+                <div style="margin-top:5px;">
+                    <button onclick="nuke()" class="btn red" style="margin:0; font-size:0.9rem;">🗑️ Zerar Tudo</button>
+                </div>
             </div>
-        </div>
-
-        <div class="admin-content" id="qList">
-            </div>
-
-        <div class="admin-footer">
-            <button onclick="forceFinish()" class="btn-modern btn-danger" style="grid-column: span 2; margin-bottom: 5px;">
-                <i class="fas fa-stopwatch"></i> ENCERRAR TEMPO
-            </button>
-            <button onclick="updateState('lobby')" class="btn-modern btn-dark"><i class="fas fa-home"></i> Lobby</button>
-            <button onclick="updateState('leaderboard')" class="btn-modern btn-primary"><i class="fas fa-chart-bar"></i> Ranking</button>
-            <button onclick="updateState('podium')" class="btn-modern btn-warning" style="grid-column: span 2;"><i class="fas fa-trophy"></i> PÓDIO FINAL</button>
-            <button onclick="nuke()" class="btn-modern btn-outline" style="grid-column: span 2; margin-top:5px; opacity:0.5; box-shadow: none; border:1px solid #ff7675; color:#ff7675;"><i class="fas fa-trash"></i> Resetar</button>
         </div>
     </div>
 
     <script type="module">
-        import { db, ref, update, get, set, keepScreenAwake, loadQuestions } from './game.js';
+        import { db, ref, update, get, set, onValue, off, keepScreenAwake, loadQuestions } from './game.js';
 
         let quizData = [];
-        let playedIndices = []; // Lista de perguntas já feitas
         let timer = null;
         let qStartTime = 0;
-        let currentIdx = 0; 
+        let isQuestionRunning = false;
+        let playerListener = null; // Para vigiar respostas
         
         const sfx = new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3');
+
         keepScreenAwake();
 
+        // --- CARREGAMENTO ---
         window.loadQ = async function(path) {
             sfx.play();
             quizData = await loadQuestions(path);
             if(!quizData.length) return;
 
-            // --- SINCRONIZAÇÃO: Envia as perguntas para a TV (Firebase) ---
-            await set(ref(db, 'activeQuiz'), quizData);
-            
-            // Reseta histórico de jogadas
-            playedIndices = [];
-            updateRemainingLabel();
-
             const list = document.getElementById('qList');
             list.innerHTML = '';
             
             quizData.forEach((q, i) => {
-                const item = document.createElement('div');
-                item.className = 'q-item';
-                item.id = `q-item-${i}`; // ID para marcar visualmente depois
-                item.innerHTML = `
-                    <div style="display:flex; align-items:center;">
-                        <span class="q-number">#${i+1}</span>
-                        <span style="font-size:0.9rem;">${q.text.substring(0,30)}...</span>
-                    </div>
-                    <i class="fas fa-play" style="color:#ddd; font-size: 0.8rem;"></i>
-                `;
-                item.onclick = () => {
-                    sfx.play();
-                    // Se clicar manual, também conta como jogada
-                    if(!playedIndices.includes(i)) playedIndices.push(i);
-                    runQ(i);
-                };
-                list.appendChild(item);
+                const btn = document.createElement('button');
+                btn.id = `btnQ${i}`;
+                btn.className = 'btn';
+                btn.style.background = "white"; btn.style.color = "#333"; btn.style.textAlign = "left";
+                btn.innerHTML = `<b>#${i+1}</b> ${q.text.substring(0,30)}...`;
+                btn.onclick = () => { sfx.play(); runQ(i); };
+                list.appendChild(btn);
             });
 
             document.getElementById('screenSelection').classList.add('hidden');
             document.getElementById('screenControl').classList.remove('hidden');
+            
+            // Força ir para o Lobby ao carregar
             updateState('lobby');
         }
 
-        // --- FUNÇÃO DE SORTEIO ---
-        window.runRandomQ = function() {
-            sfx.play();
-            // Cria array com índices disponíveis (0, 1, 2...) filtrando os já jogados
-            const available = quizData.map((_, i) => i).filter(i => !playedIndices.includes(i));
-            
-            if(available.length === 0) {
-                alert("Fim do Quiz! Todas as perguntas foram feitas.");
-                return;
-            }
-
-            // Sorteia um índice
-            const randomIndex = available[Math.floor(Math.random() * available.length)];
-            
-            playedIndices.push(randomIndex);
-            runQ(randomIndex);
-        }
-
-        function updateRemainingLabel() {
-            const total = quizData.length;
-            const left = total - playedIndices.length;
-            document.getElementById('lblRemaining').innerText = `${left} de ${total}`;
-            
-            // Marca visualmente os jogados na lista
-            playedIndices.forEach(idx => {
-                const el = document.getElementById(`q-item-${idx}`);
-                if(el) {
-                    el.style.opacity = "0.5";
-                    el.style.background = "#e0e0e0";
-                    el.querySelector('.fa-play').className = "fas fa-check";
-                }
-            });
-        }
-
+        // --- ESTADOS GERAIS ---
         window.updateState = (screen) => { 
-            sfx.play();
-            update(ref(db, 'gameState'), { screen: screen }); 
-        }
-        
-        window.nuke = () => { if(confirm("Tem certeza?")) set(ref(db, 'players'), {}); }
-
-        window.forceFinish = function() {
-            if(timer) {
-                clearTimeout(timer);
-                finishQ(currentIdx);
-            }
-        }
-
-        window.runQ = async function(idx) {
+            // Cancela monitoramento anterior se houver
+            if(playerListener) { off(ref(db, 'players'), playerListener); playerListener = null; }
             if(timer) clearTimeout(timer);
             
-            updateRemainingLabel(); // Atualiza contador
+            update(ref(db, 'gameState'), { screen: screen });
             
-            // Marca visualmente o item ativo
-            Array.from(document.querySelectorAll('.q-item')).forEach(c => c.classList.remove('active'));
-            const activeEl = document.getElementById(`q-item-${idx}`);
-            if(activeEl) activeEl.classList.add('active');
+            // Atualiza UI do botão principal
+            const btn = document.getElementById('btnNextAction');
+            if(screen === 'lobby') {
+                btn.innerText = "⏳ Aguardando no Lobby...";
+                btn.onclick = () => alert("Escolha uma pergunta abaixo para começar!");
+                btn.style.background = "#555";
+            }
+        }
 
-            currentIdx = idx;
+        window.nuke = () => { if(confirm("Isso vai apagar todos os jogadores. Confirmar?")) set(ref(db, 'players'), {}); }
+
+        // --- RODAR PERGUNTA ---
+        window.runQ = async function(idx) {
+            // 1. Limpeza e Setup
+            if(timer) clearTimeout(timer);
+            if(playerListener) { off(ref(db, 'players'), playerListener); } // Para listener antigo
+            
+            isQuestionRunning = true;
             qStartTime = Date.now();
-            const timeLimit = 30; 
+            const timeLimit = 20; // Segundos
 
+            // Feedback Visual no Admin
+            document.querySelectorAll('#qList button').forEach(b => b.style.background = "white");
+            document.getElementById(`btnQ${idx}`).style.background = "#e6f4ff";
+            document.getElementById('statusBar').innerText = `Pergunta ${idx+1} rolando...`;
+
+            // 2. Resetar Jogadores (CRUCIAL PARA CONTINUIDADE)
+            // Fazemos isso ANTES de mudar a tela da TV
             const pSnap = await get(ref(db, 'players'));
             const updates = {};
-            if(pSnap.exists()) pSnap.forEach(c => { 
-                updates[`players/${c.key}/lastAnswer`] = null; 
-                updates[`players/${c.key}/status`] = 'thinking'; 
-                updates[`players/${c.key}/answerTime`] = null; 
-            });
             
+            let totalPlayers = 0;
+            if(pSnap.exists()) {
+                pSnap.forEach(c => { 
+                    totalPlayers++;
+                    updates[`players/${c.key}/lastAnswer`] = null; 
+                    updates[`players/${c.key}/status`] = 'thinking'; 
+                    updates[`players/${c.key}/answerTime`] = null; 
+                });
+            }
+
+            // Define estado da pergunta
             updates['gameState'] = { 
                 screen: 'question', 
                 currentQuestion: idx, 
                 showResult: false, 
                 endTime: qStartTime+(timeLimit*1000) 
             };
+            
             await update(ref(db), updates);
 
-            timer = setTimeout(() => finishQ(idx), timeLimit*1000);
+            // 3. MONITORAMENTO DE RESPOSTAS (AUTO-STOP)
+            const playersRef = ref(db, 'players');
+            playerListener = onValue(playersRef, (snap) => {
+                if(!isQuestionRunning) return;
+
+                const players = snap.val();
+                if(!players) return;
+
+                let answeredCount = 0;
+                let currentTotal = 0;
+
+                Object.values(players).forEach(p => {
+                    currentTotal++;
+                    if(p.lastAnswer !== undefined && p.lastAnswer !== null) {
+                        answeredCount++;
+                    }
+                });
+
+                // Atualiza status no Admin
+                document.getElementById('statusBar').innerText = `Resp: ${answeredCount} / ${currentTotal}`;
+
+                // SE TODOS RESPONDERAM
+                if(currentTotal > 0 && answeredCount >= currentTotal) {
+                    console.log("Todos responderam! Encerrando...");
+                    finishQ(idx);
+                }
+            });
+
+            // Timer de segurança (caso alguém caia e não responda)
+            timer = setTimeout(() => {
+                if(isQuestionRunning) finishQ(idx);
+            }, timeLimit * 1000);
         }
 
+        // --- FINALIZAR PERGUNTA ---
         async function finishQ(idx) {
+            if(!isQuestionRunning) return;
+            isQuestionRunning = false;
+            
+            // Para de vigiar as respostas
+            if(playerListener) { off(ref(db, 'players'), playerListener); playerListener = null; }
             if(timer) clearTimeout(timer);
-            timer = null;
 
             const pSnap = await get(ref(db, 'players'));
             const correct = quizData[idx].correct;
             const updates = {};
+            
+            // Avisa a TV para mostrar resultado
             updates['gameState/showResult'] = true;
 
+            // Calcula Pontos
             if(pSnap.exists()) pSnap.forEach(c => {
                 const p = c.val();
                 if(p.lastAnswer === correct) {
                     const streak = (p.streak||0) + 1;
-                    let taken = (p.answerTime || (qStartTime+30000)) - qStartTime;
-                    if(taken < 0) taken = 0; 
-                    if(taken > 30000) taken = 30000;
-                    const bonus = Math.floor(500 * (1 - (taken/30000)));
-                    updates[`players/${c.key}/score`] = (p.score||0) + 500 + bonus + (streak>2?200:0);
+                    
+                    // Cálculo de Tempo
+                    let taken = (p.answerTime || (qStartTime+20000)) - qStartTime;
+                    if(taken < 0) taken = 0; if(taken > 20000) taken = 20000;
+                    
+                    // Fórmula: 1000 pts base + bônus de tempo
+                    const bonus = Math.floor(500 * (1 - (taken/20000))); 
+                    const totalPoints = 500 + bonus + (streak>2?200:0);
+
+                    updates[`players/${c.key}/score`] = (p.score||0) + totalPoints;
                     updates[`players/${c.key}/streak`] = streak;
                     updates[`players/${c.key}/status`] = 'correct';
                 } else {
@@ -216,7 +211,28 @@
                     updates[`players/${c.key}/status`] = 'wrong';
                 }
             });
+
             await update(ref(db), updates);
+            document.getElementById('statusBar').innerText = "Resultado exibido!";
+            
+            // Prepara botão para PRÓXIMA pergunta
+            const nextIdx = idx + 1;
+            const btnNext = document.getElementById('btnNextAction');
+            if(nextIdx < quizData.length) {
+                btnNext.innerText = `➡️ Lançar Pergunta ${nextIdx + 1}`;
+                btnNext.onclick = () => { sfx.play(); runQ(nextIdx); };
+                btnNext.style.background = "#26890c"; // Verde para indicar continuidade
+                
+                // Scroll automático para a próxima pergunta na lista
+                const nextBtnEl = document.getElementById(`btnQ${nextIdx}`);
+                if(nextBtnEl) nextBtnEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+
+            } else {
+                btnNext.innerText = "🏆 Fim! Ir para o Pódio";
+                btnNext.onclick = () => updateState('podium');
+                btnNext.style.background = "#ffc00a";
+                btnNext.style.color = "black";
+            }
         }
     </script>
 </body>
