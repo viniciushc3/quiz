@@ -11,9 +11,14 @@
         
         <div id="screenSelection" style="padding: 20px;">
             <h2 style="margin-bottom:20px; color:#333;">📂 Escolha o Quiz</h2>
-            <button onclick="loadQ('./quizzes/geral.json')" class="btn btn-main" style="margin-bottom:15px; text-align:left; justify-content: flex-start;">🌍 Conhecimentos Gerais</button>
-            <button onclick="loadQ('./quizzes/series.json')" class="btn btn-main" style="margin-bottom:15px; text-align:left; justify-content: flex-start;">🎬 Séries e Filmes</button>
-            </div>
+            
+            <button onclick="loadQ('./quizzes/geral.json')" class="q-btn">
+                🌍 Conhecimentos Gerais
+            </button>
+             <button onclick="loadQ('./quizzes/series.json')" class="q-btn">
+                🎬 Séries e Filmes
+            </button>
+             </div>
 
         <div id="screenControl" class="hidden" style="display:flex; flex-direction:column; height:100%;">
             
@@ -29,17 +34,22 @@
 
             <div class="admin-footer">
                 
-                <button id="btnNextAction" onclick="updateState('lobby')" class="btn btn-main">
+                <button id="btnNextAction" onclick="updateState('lobby')" class="btn btn-main" style="margin-bottom: 15px;">
                     🏠 Ir para Lobby
                 </button>
 
                 <div class="control-grid">
                     <button id="btnRank" onclick="toggleRanking()" class="btn btn-blue">📊 Ranking</button>
-                    <button onclick="updateState('podium')" class="btn btn-yellow">🏆 Pódio Final</button>
+                    <button onclick="updateState('podium')" class="btn btn-yellow">🏆 Pódio</button>
                 </div>
                 
-                <div style="margin-top: 10px;">
-                     <button onclick="nuke()" class="btn btn-red" style="padding: 10px; font-size: 0.9rem;">🗑️ Zerar Sala</button>
+                <div class="control-grid" style="margin-top: 10px; padding-top: 10px; border-top: 1px dashed #ccc;">
+                     <button onclick="updateState('lobby')" class="btn" style="background: #6c757d; color: white;">
+                        🔄 Reiniciar Jogo
+                    </button>
+                     <button onclick="nuke()" class="btn btn-red">
+                        🗑️ Zerar Sala
+                    </button>
                 </div>
             </div>
         </div>
@@ -51,9 +61,8 @@
         let quizData = [];
         let timer = null;
         let qStartTime = 0;
-        let currentIdx = -1; // Guarda o índice atual
         let isQuestionRunning = false;
-        let isRankingOpen = false; // Controle do Toggle
+        let isRankingOpen = false;
         let playerListener = null;
         const sfx = new Audio('https://www.soundjay.com/buttons/sounds/button-16.mp3');
 
@@ -83,41 +92,32 @@
         }
 
         window.updateState = (screen) => { 
-            // Limpa listeners antigos
             if(playerListener) { off(ref(db, 'players'), playerListener); playerListener = null; }
             if(timer) clearTimeout(timer);
             isQuestionRunning = false;
 
             update(ref(db, 'gameState'), { screen: screen });
 
-            // Atualiza Botão Principal baseando-se na tela
+            // Atualiza Botão Principal
             const mainBtn = document.getElementById('btnNextAction');
-            
             if(screen === 'lobby') {
                 mainBtn.innerText = "⏳ Aguardando no Lobby";
                 mainBtn.className = "btn btn-main";
-                mainBtn.onclick = () => alert("Selecione uma pergunta da lista para começar!");
-                isRankingOpen = false; // Reseta toggle
-            } 
-            else if (screen === 'leaderboard') {
-                isRankingOpen = true; // Marca que tá aberto
-            }
-            else if (screen === 'podium') {
+                mainBtn.onclick = () => alert("Selecione uma pergunta para começar!");
                 isRankingOpen = false;
-            }
+            } 
+            else if (screen === 'leaderboard') isRankingOpen = true;
+            else if (screen === 'podium') isRankingOpen = false;
 
-            updateRankButtonUI(); // Atualiza texto do botão ranking
+            updateRankButtonUI();
         }
 
-        // --- LÓGICA DE TOGGLE DO RANKING ---
         window.toggleRanking = () => {
             sfx.play();
             if (isRankingOpen) {
-                // Se já está aberto, volta pro Lobby (para preparar prox pergunta)
                 updateState('lobby');
                 isRankingOpen = false;
             } else {
-                // Se não está aberto, abre
                 updateState('leaderboard');
                 isRankingOpen = true;
             }
@@ -128,29 +128,26 @@
             const btn = document.getElementById('btnRank');
             if (isRankingOpen) {
                 btn.innerText = "🔙 Voltar pro Jogo";
-                btn.style.background = "#666"; // Cor cinza para indicar 'voltar'
+                btn.style.background = "#666";
             } else {
                 btn.innerText = "📊 Ver Ranking";
-                btn.style.background = "#007bff"; // Azul original
+                btn.style.background = "#007bff";
             }
         }
         
         window.nuke = () => { if(confirm("Certeza que quer apagar todos?")) set(ref(db, 'players'), {}); }
 
-        // --- RODAR PERGUNTA ---
         window.runQ = async function(idx) {
             if(timer) clearTimeout(timer);
             if(playerListener) off(ref(db, 'players'), playerListener);
             
-            currentIdx = idx;
             isQuestionRunning = true;
-            isRankingOpen = false; // Pergunta fecha o ranking
+            isRankingOpen = false; 
             updateRankButtonUI();
 
             qStartTime = Date.now();
             const timeLimit = 30;
 
-            // Highlight visual
             document.querySelectorAll('.q-btn').forEach(b => b.classList.remove('active'));
             const activeBtn = document.getElementById(`btnQ${idx}`);
             if(activeBtn) {
@@ -158,15 +155,14 @@
                 activeBtn.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
             
-            document.getElementById('statusBar').innerText = `Pergunta ${idx+1} rolando...`;
+            document.getElementById('statusBar').innerText = `Pergunta ${idx+1}...`;
 
-            // CONFIGURA BOTÃO PARA "ENCERRAR MANUALMENTE"
             const mainBtn = document.getElementById('btnNextAction');
             mainBtn.innerText = "🛑 Encerrar Tempo Agora";
-            mainBtn.className = "btn btn-red"; // Vermelho
-            mainBtn.onclick = () => finishQ(idx); // Clicar encerra manualmente
+            mainBtn.className = "btn btn-red";
+            mainBtn.onclick = () => finishQ(idx);
 
-            // Resetar Players
+            // Reset Players
             const pSnap = await get(ref(db, 'players'));
             const updates = {};
             if(pSnap.exists()) {
@@ -194,17 +190,11 @@
             
             await update(ref(db), updates);
 
-            // MONITORAMENTO (AUTO-STOP)
             const playersRef = ref(db, 'players');
             playerListener = onValue(playersRef, (snap) => {
                 if(!isQuestionRunning) return;
                 const players = snap.val();
-                
-                // Se não tem players, não faz nada
-                if(!players) {
-                    document.getElementById('statusBar').innerText = "0 Jogadores";
-                    return;
-                }
+                if(!players) { document.getElementById('statusBar').innerText = "0 Players"; return; }
 
                 let answered = 0, total = 0;
                 Object.values(players).forEach(p => {
@@ -212,24 +202,16 @@
                     if(p.lastAnswer !== undefined && p.lastAnswer !== null) answered++;
                 });
 
-                document.getElementById('statusBar').innerText = `Respondido: ${answered} / ${total}`;
-                
-                // LÓGICA DE ENCERRAMENTO AUTOMÁTICO
-                if(total > 0 && answered >= total) {
-                    console.log("Todos responderam. Encerrando...");
-                    finishQ(idx);
-                }
+                document.getElementById('statusBar').innerText = `Resp: ${answered} / ${total}`;
+                if(total > 0 && answered >= total) finishQ(idx);
             });
 
-            // Timer de segurança (caso alguém caia e não responda)
             timer = setTimeout(() => { if(isQuestionRunning) finishQ(idx); }, timeLimit*1000);
         }
 
         async function finishQ(idx) {
-            // Evita rodar duas vezes
             if(!isQuestionRunning) return;
             isQuestionRunning = false;
-            
             if(playerListener) off(ref(db, 'players'), playerListener);
             if(timer) clearTimeout(timer);
 
@@ -257,18 +239,16 @@
             });
 
             await update(ref(db), updates);
-            document.getElementById('statusBar').innerText = "Resultado na Tela";
+            document.getElementById('statusBar').innerText = "Resultado";
             
-            // CONFIGURA BOTÃO PARA "PRÓXIMA PERGUNTA"
             const btnNext = document.getElementById('btnNextAction');
-            
             if(idx + 1 < quizData.length) {
                 btnNext.innerText = `➡️ Próxima: Pergunta ${idx + 2}`;
-                btnNext.className = "btn btn-green"; // Estilo verde (adicione no CSS ou use style inline)
-                btnNext.style.backgroundColor = "#28a745"; // Força verde
+                btnNext.className = "btn btn-green";
+                btnNext.style.backgroundColor = "#28a745";
                 btnNext.onclick = () => { sfx.play(); runQ(idx + 1); };
             } else {
-                btnNext.innerText = "🏆 Fim do Quiz! Ir para Pódio";
+                btnNext.innerText = "🏆 Ir para Pódio";
                 btnNext.className = "btn btn-yellow";
                 btnNext.onclick = () => updateState('podium');
             }
